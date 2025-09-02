@@ -24,6 +24,11 @@ def render_dashboard():
         text-align: center;
         margin-bottom: 1rem;
         transition: transform 0.2s ease;
+        height: 180px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 180px;
     }
     .metric-card:hover {
         transform: translateY(-2px);
