@@ -47,8 +47,8 @@ class FinancialTracker {
             return;
         }
         
-        const username = usernameEl.value.trim();
-        const password = passwordEl.value.trim();
+        const username = usernameEl?.value?.trim() || '';
+        const password = passwordEl?.value?.trim() || '';
         
         if (!username || !password) {
             if (errorDiv) {
