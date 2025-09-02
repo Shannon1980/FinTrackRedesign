@@ -83,7 +83,15 @@ class FinancialTracker {
     }
 
     showLogin() {
-        new bootstrap.Modal(document.getElementById('loginModal')).show();
+        document.getElementById('welcomeScreen').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'none';
+        document.getElementById('authContainer').style.display = 'block';
+    }
+
+    showWelcome() {
+        document.getElementById('welcomeScreen').style.display = 'block';
+        document.getElementById('mainContent').style.display = 'none';
+        document.getElementById('authContainer').style.display = 'none';
     }
 
     // UI methods
@@ -748,11 +756,6 @@ class FinancialTracker {
     }
 
     // Authentication functions
-    showLogin() {
-        document.getElementById('welcomeScreen').style.display = 'block';
-        document.getElementById('mainContent').style.display = 'none';
-        document.getElementById('authContainer').style.display = 'block';
-    }
 
     // Financial projections
     async generateProjections() {
@@ -979,6 +982,15 @@ function logout() {
 
 function showLogin() {
     app.showLogin();
+}
+
+function showWelcome() {
+    app.showWelcome();
+}
+
+function login(event) {
+    event.preventDefault();
+    app.login();
 }
 
 function showAddEmployee() {
