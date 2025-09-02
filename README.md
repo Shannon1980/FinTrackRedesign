@@ -1,53 +1,61 @@
 # SEAS Financial Tracker
 
-A comprehensive project financial management platform built with Streamlit that provides professional-grade financial analytics, team management, and project oversight capabilities.
+A comprehensive project financial management platform built with React/Node.js/Express/MongoDB stack that provides professional-grade financial analytics, team management, contract cost management, and HR capabilities.
 
-![SEAS Financial Tracker](https://img.shields.io/badge/Built%20with-Streamlit-FF6B6B?style=for-the-badge&logo=streamlit)
-![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python)
-![Plotly](https://img.shields.io/badge/Charts-Plotly-00D4FF?style=for-the-badge&logo=plotly)
+![Node.js](https://img.shields.io/badge/Backend-Node.js-339933?style=for-the-badge&logo=node.js)
+![Express](https://img.shields.io/badge/Framework-Express-000000?style=for-the-badge&logo=express)
+![MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248?style=for-the-badge&logo=mongodb)
+![React](https://img.shields.io/badge/Frontend-React-61DAFB?style=for-the-badge&logo=react)
 
 ## ✨ Features
 
-### 📊 Enhanced Dashboard
-- **Professional KPI Cards** with gradient backgrounds, shadows, and hover effects
-- **Color-coded Metrics** for quick status recognition (green/yellow/red)
-- **Real-time Financial Overview** with budget vs actual tracking
-- **Interactive Charts** using Plotly for budget allocation and expense analysis
-- **Project Timeline Visualization** with milestone tracking
+### 📊 Dashboard Analytics
+- **Real-time Financial Overview** with comprehensive KPI tracking
+- **Team Performance Metrics** showing active employees and monthly hours
+- **Cost Variance Analysis** between priced and current salaries
+- **Professional Interface** with Bootstrap 5 styling and Font Awesome icons
 
 ### 👥 Team Management
-- **Employee Lifecycle Management** with comprehensive forms
-- **Team Analytics** with department and role distribution charts
-- **Advanced Search & Filtering** by department, status, and skills
-- **Salary Analysis** with distribution histograms
-- **Bulk Operations** for data export and team reports
+- **Employee Lifecycle Management** with unique ID generation
+- **Active/Inactive Status Tracking** for team members
+- **Role Management** with Manager and Employee designations
+- **SEAS IT Department** integration
+- **Advanced Search & Filtering** by department, LCAT, and status
+- **CSV Import/Export** capabilities for bulk operations
 
-### 📈 Advanced Analytics
-- **Financial Health Score** with gauge visualization
-- **Performance Dashboards** comparing budget vs time progress
-- **Expense Breakdown Analysis** with category-wise spending
-- **Trends & Forecasting** with risk indicators
-- **Cost per Employee Analysis** for resource optimization
+### 💰 Monthly Billing System
+- **Period-based Billing** (JAN-FEB, FEB-MAR, etc.) starting on 12th of each month
+- **Working Days Calculation** excluding federal holidays
+- **Bill Rate × Hours** revenue calculations
+- **Actual vs Projected** billing comparisons
+- **Federal Holiday Integration** for accurate hour tracking
 
-### 📋 Reports & Export
-- **Comprehensive Report Generation** (Financial, Team, Project Status)
-- **Multiple Export Formats** (CSV, JSON, Excel)
-- **Data Import/Export** capabilities for backup and migration
-- **System Settings** with notification preferences
+### 💼 Contract Cost Management
+- **Monthly Dollar-based Indirect Costs** (Fringe, Overhead, G&A, Profit)
+- **Other Direct Costs (ODC)** tracking by category and month
+- **Project Cost Summaries** combining labor, ODCs, and indirect costs
+- **CSV Import/Export** for cost data management
+
+### 📈 Financial Projections
+- **Comprehensive Financial Analytics** with salary increase projections
+- **Attrition Rate Modeling** and new hire impact analysis
+- **Multi-month Forecasting** capabilities
+- **Team Growth Planning** tools
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: Streamlit with custom CSS styling
-- **Data Visualization**: Plotly Express & Graph Objects
-- **Data Processing**: Pandas & NumPy
-- **Session Management**: Streamlit Session State
-- **Architecture**: Component-based modular design
+- **Backend**: Node.js with Express framework
+- **Database**: MongoDB with Mongoose ODM
+- **Frontend**: Vanilla JavaScript with Bootstrap 5
+- **Authentication**: JWT-based security
+- **File Processing**: Multer for uploads, Papa Parse for CSV handling
+- **Security**: CORS, bcryptjs for password hashing
 
 ## 🚀 Installation & Setup
 
 ### Prerequisites
-- Python 3.11+
-- pip package manager
+- Node.js 18+ or 20+
+- MongoDB (local or cloud instance)
 
 ### Installation
 
@@ -59,108 +67,108 @@ A comprehensive project financial management platform built with Streamlit that 
 
 2. **Install dependencies**
    ```bash
-   pip install streamlit pandas numpy plotly
+   npm install
    ```
 
-3. **Run the application**
+3. **Configure environment variables**
+   Create a `.env` file with:
+   ```
+   MONGODB_URI=your-mongodb-connection-string
+   JWT_SECRET=your-jwt-secret-key
+   PORT=5000
+   ```
+
+4. **Run the application**
    ```bash
-   streamlit run app.py --server.port 5000
+   node server.js
    ```
 
-4. **Access the application**
+5. **Access the application**
    - Open your browser and navigate to `http://localhost:5000`
+   - Default credentials: admin / admin123
 
 ## 📁 Project Structure
 
 ```
 seas-financial-tracker/
-├── app.py                 # Main application entry point
-├── components/            # Modular UI components
-│   ├── dashboard.py       # Enhanced dashboard with KPI cards
-│   ├── team_management.py # Employee management interface
-│   ├── analytics.py       # Advanced analytics and insights
-│   ├── reports.py         # Report generation and export
-│   └── sidebar.py         # Collapsible sidebar with quick actions
-├── utils/                 # Utility classes and helpers
-│   ├── data_manager.py    # Centralized data management
-│   └── chart_helpers.py   # Plotly chart creation utilities
-├── .streamlit/
-│   └── config.toml        # Streamlit configuration
+├── server.js                     # Main server and API endpoints
+├── public/                       # Static frontend files
+│   ├── index.html                # Main application interface
+│   └── js/
+│       └── app.js                # Frontend JavaScript logic
+├── employee_template_with_monthly_billing.csv
+├── indirect_costs_template.csv
+├── package.json                  # Node.js dependencies
 └── README.md
 ```
 
-## 🎨 UI/UX Improvements
+## 🎨 User Interface
 
-### Enhanced Dashboard Design
-- **Modern KPI Cards**: Gradient backgrounds with professional styling
-- **Consistent Sizing**: All metric cards have uniform 180px height
-- **Color Psychology**: 
-  - 🟢 Green for positive values and healthy status
-  - 🔴 Red for negative values and alerts
-  - 🟡 Yellow for warnings and caution states
-  - 🔵 Blue for neutral information and primary branding
+### Modern Web Application
+- **Bootstrap 5 Framework** for responsive design
+- **Tabbed Navigation** for intuitive organization
+- **Real-time Updates** with AJAX calls
+- **Interactive Forms** with validation
+- **Professional Styling** with modern colors and typography
 
-### Responsive Layout
-- **Tab-based Navigation** for intuitive organization
-- **Collapsible Sidebar** with grouped controls
-- **Mobile-friendly Design** with responsive columns
-- **Interactive Elements** with hover effects and smooth transitions
+### Key Components
+- **Team Management Tab**: Employee CRUD operations with unique IDs
+- **Monthly Billing Tab**: Period-based billing management
+- **Financial Projections Tab**: Advanced analytics and forecasting
+- **Contract Costs Tab**: Indirect costs and ODC management
+- **Analytics Tab**: Data visualization and insights
 
 ## 📊 Data Management
 
-### Session State Architecture
-- **Persistent Data Storage** during user sessions
-- **Real-time Updates** across all components
-- **Data Consistency** with centralized management
-- **No External Database Required** for demonstration purposes
+### MongoDB Schema
+- **Employee Schema**: Comprehensive team member records with monthly billing data
+- **Monthly Indirect Costs**: Dollar-based cost tracking by period
+- **Project Costs**: Combined labor, ODC, and indirect cost summaries
+- **ODC Items**: Categorized other direct costs with monthly tracking
 
-### Supported Data Operations
-- Employee records with full profile information
-- Financial data with expense tracking by category
-- Project settings and timeline management
-- Budget allocation and utilization monitoring
+### Features
+- **Automatic ID Generation** for unique employee identification
+- **Monthly Period Tracking** with federal holiday calculations
+- **Real-time Calculations** for financial metrics
+- **Data Import/Export** via CSV templates
 
 ## 🔧 Configuration
 
-### Streamlit Configuration
-The application includes optimized Streamlit settings in `.streamlit/config.toml`:
-
-```toml
-[server]
-headless = true
-address = "0.0.0.0"
-port = 5000
-
-[theme]
-primaryColor = "#007bff"
-backgroundColor = "#ffffff"
-secondaryBackgroundColor = "#f8f9fa"
-textColor = "#212529"
+### Environment Variables
+```bash
+MONGODB_URI=mongodb://localhost:27017/seas-financial
+JWT_SECRET=seas-financial-secret
+PORT=5000
 ```
+
+### Monthly Billing Periods
+The system uses 12 billing periods:
+- JAN-FEB, FEB-MAR, MAR-APR, APR-MAY
+- MAY-JUN, JUN-JUL, JUL-AUG, AUG-SEP
+- SEP-OCT, OCT-NOV, NOV-DEC, DEC-JAN
 
 ## 📈 Usage Guide
 
 ### Getting Started
-1. **Project Setup**: Use the sidebar to configure your project name, budget, and department
-2. **Add Team Members**: Navigate to the Team Management tab to add employees
-3. **Track Expenses**: Use the sidebar quick actions to record expenses by category
-4. **Monitor Progress**: View real-time analytics in the Dashboard and Analytics tabs
-5. **Generate Reports**: Export comprehensive reports from the Reports & Settings tab
+1. **Login**: Use admin/admin123 credentials
+2. **Add Team Members**: Navigate to Team Management and add employees
+3. **Set Up Billing**: Configure monthly billing periods and rates
+4. **Track Costs**: Manage indirect costs and ODCs
+5. **Monitor Analytics**: View financial projections and team analytics
 
 ### Key Workflows
-- **Budget Monitoring**: Track spending against allocated budgets with visual progress bars
-- **Team Analytics**: Analyze team composition, salary distributions, and productivity metrics
-- **Financial Forecasting**: Use trend analysis to project future spending and identify risks
-- **Data Export**: Backup your data or share reports with stakeholders
+- **Employee Management**: Add/edit team members with unique IDs and status tracking
+- **Monthly Billing**: Track actual vs projected hours and revenue
+- **Cost Management**: Enter monthly indirect costs and ODC items
+- **Financial Analysis**: Generate projections and analyze team performance
 
-## 🤝 Contributing
+## 🔐 Security Features
 
-This project follows a modular architecture that makes it easy to extend and customize:
-
-- **Add New Components**: Create new files in the `components/` directory
-- **Extend Analytics**: Add new chart types in `utils/chart_helpers.py`
-- **Enhance Data Models**: Expand the `DataManager` class for additional functionality
-- **Custom Styling**: Modify CSS in component files for visual customizations
+- **JWT Authentication** for secure API access
+- **Password Hashing** with bcryptjs
+- **CORS Configuration** for cross-origin security
+- **Input Validation** for all API endpoints
+- **Protected Routes** requiring authentication
 
 ## 📄 License
 
@@ -169,16 +177,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🆘 Support
 
 For questions, issues, or feature requests:
-- 📧 Email: support@seastracker.com
 - 💬 Create an issue in this repository
-- 📚 Check the in-app help documentation
-
-## 🌟 Acknowledgments
-
-- Built with [Streamlit](https://streamlit.io/) for rapid web app development
-- Powered by [Plotly](https://plotly.com/) for interactive visualizations
-- Uses [Pandas](https://pandas.pydata.org/) for efficient data processing
+- 📧 Contact the development team
+- 📚 Check the API documentation
 
 ---
 
-*© 2025 SEAS Financial Tracker. Built with ❤️ for modern project management.*
+*© 2025 SEAS Financial Tracker. Built for comprehensive project financial management.*
