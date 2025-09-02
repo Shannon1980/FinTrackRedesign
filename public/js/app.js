@@ -750,6 +750,13 @@ class FinancialTracker {
         this.showAlert('success', 'ODC template downloaded!');
     }
 
+    // Authentication functions
+    showLogin() {
+        document.getElementById('welcomeScreen').style.display = 'block';
+        document.getElementById('mainContent').style.display = 'none';
+        document.getElementById('authContainer').style.display = 'block';
+    }
+
     // Financial projections
     async generateProjections() {
         const months = parseInt(document.getElementById('projectionMonths').value);
@@ -1159,19 +1166,20 @@ async function updateMonthlyBilling(employeeId, month) {
         console.error('Error updating monthly billing:', error);
         app.showAlert('danger', 'Error updating billing: ' + error.message);
     }
+}
 
-    // Import functions for contract costs
-    async importData(endpoint, fileInputId, successMessage) {
+// Import functions for contract costs
+async function importDataHelper(endpoint, fileInputId, successMessage) {
         const fileInput = document.getElementById(fileInputId);
         const file = fileInput.files[0];
         
         if (!file) {
-            this.showAlert('warning', 'Please select a file to import');
+            app.showAlert('warning', 'Please select a file to import');
             return;
         }
 
         if (!file.name.toLowerCase().endsWith('.csv')) {
-            this.showAlert('danger', 'Please select a CSV file');
+            app.showAlert('danger', 'Please select a CSV file');
             return;
         }
 
@@ -1179,12 +1187,12 @@ async function updateMonthlyBilling(employeeId, month) {
         formData.append('file', file);
 
         try {
-            this.showAlert('info', 'Importing data, please wait...');
+            app.showAlert('info', 'Importing data, please wait...');
             
             const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${this.authToken}`
+                    'Authorization': `Bearer ${app.authToken}`
                 },
                 body: formData
             });
@@ -1192,23 +1200,22 @@ async function updateMonthlyBilling(employeeId, month) {
             const result = await response.json();
 
             if (response.ok) {
-                this.showAlert('success', result.message);
+                app.showAlert('success', result.message);
                 fileInput.value = ''; // Clear file input
                 
                 // Show import details if there were errors
                 if (result.results && result.results.failed > 0) {
                     console.log('Import errors:', result.results.errors);
-                    this.showAlert('warning', `${result.results.failed} records failed to import. Check console for details.`);
+                    app.showAlert('warning', `${result.results.failed} records failed to import. Check console for details.`);
                 }
             } else {
-                this.showAlert('danger', 'Import failed: ' + result.message);
+                app.showAlert('danger', 'Import failed: ' + result.message);
             }
         } catch (error) {
             console.error('Import error:', error);
-            this.showAlert('danger', 'Import failed: ' + error.message);
+            app.showAlert('danger', 'Import failed: ' + error.message);
         }
     }
-}
 
 // Contract Costs and ODC Management Functions
 let currentProjectCosts = null;
@@ -1430,14 +1437,14 @@ async function removeOdcItem(month, itemIndex) {
 
 // Global import functions for contract costs
 async function importIndirectCosts() {
-    await app.importData('/api/import/indirect-costs', 'indirectCostFile', 'Indirect costs imported successfully');
+    await importDataHelper('/api/import/indirect-costs', 'indirectCostFile', 'Indirect costs imported successfully');
     
     // Reload current year's rates
     await loadIndirectCosts();
 }
 
 async function importOdcItems() {
-    await app.importData('/api/import/odc-items', 'odcFile', 'ODC items imported successfully');
+    await importDataHelper('/api/import/odc-items', 'odcFile', 'ODC items imported successfully');
     
     // Refresh current project costs view if loaded
     const costDisplay = document.getElementById('costSummaryDisplay');
