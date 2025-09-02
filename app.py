@@ -7,6 +7,7 @@ from components.team_management import render_team_management
 from components.analytics import render_analytics
 from components.reports import render_reports
 from components.contract_costs import render_contract_costs
+from components.enhanced_team import render_enhanced_team
 from utils.data_manager import DataManager
 
 # Configure page
@@ -34,9 +35,10 @@ def main():
     render_sidebar()
     
     # Main content area with tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "🏠 Dashboard Overview", 
         "👥 Team Management", 
+        "💼 Enhanced Team & Projections", 
         "💰 Contract Costs", 
         "📈 Analytics & Reports", 
         "⚙️ Settings"
@@ -49,12 +51,15 @@ def main():
         render_team_management()
     
     with tab3:
-        render_contract_costs()
+        render_enhanced_team()
     
     with tab4:
-        render_analytics()
+        render_contract_costs()
     
     with tab5:
+        render_analytics()
+    
+    with tab6:
         render_reports()
 
 if __name__ == "__main__":

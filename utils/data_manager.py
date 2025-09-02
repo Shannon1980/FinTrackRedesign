@@ -56,6 +56,10 @@ class DataManager:
                 'start_date': datetime.now(),
                 'end_date': datetime.now() + timedelta(days=365)
             }
+        
+        # Initialize enhanced employee data
+        if 'enhanced_employees' not in st.session_state:
+            st.session_state.enhanced_employees = []
     
     def add_employee(self, employee_data):
         """Add a new employee to the system"""
@@ -224,6 +228,48 @@ class DataManager:
             })
         return pd.DataFrame(data)
     
+    # Enhanced Employee Management Methods
+    
+    def add_enhanced_employee(self, employee_data):
+        """Add a new enhanced employee with LCAT and financial data"""
+        employee_data['id'] = len(st.session_state.enhanced_employees) + 1
+        employee_data['date_added'] = datetime.now()
+        st.session_state.enhanced_employees.append(employee_data)
+    
+    def get_enhanced_employees_df(self):
+        """Return enhanced employees as DataFrame"""
+        if not st.session_state.enhanced_employees:
+            return pd.DataFrame()
+        return pd.DataFrame(st.session_state.enhanced_employees)
+    
+    def get_team_cost_summary(self):
+        """Get comprehensive team cost summary"""
+        enhanced_df = self.get_enhanced_employees_df()
+        
+        if enhanced_df.empty:
+            return {
+                'total_priced_salary': 0,
+                'total_current_salary': 0,
+                'total_monthly_hours': 0,
+                'average_hourly_rate': 0,
+                'team_size': 0,
+                'cost_variance': 0
+            }
+        
+        total_priced = enhanced_df['priced_salary'].sum()
+        total_current = enhanced_df['current_salary'].sum()
+        total_hours = enhanced_df['hours_per_month'].sum()
+        
+        return {
+            'total_priced_salary': total_priced,
+            'total_current_salary': total_current,
+            'total_monthly_hours': total_hours,
+            'average_hourly_rate': (total_current / 12 / total_hours) if total_hours > 0 else 0,
+            'team_size': len(enhanced_df),
+            'cost_variance': total_current - total_priced,
+            'cost_variance_pct': ((total_current - total_priced) / total_priced * 100) if total_priced > 0 else 0
+        }
+    
     def get_monthly_burn_rate(self):
         """Calculate monthly burn rate"""
         cost_summary = self.get_cost_summary()
@@ -269,3 +315,45 @@ class DataManager:
             })
         
         return pd.DataFrame(data)
+    
+    # Enhanced Employee Management Methods
+    
+    def add_enhanced_employee(self, employee_data):
+        """Add a new enhanced employee with LCAT and financial data"""
+        employee_data['id'] = len(st.session_state.enhanced_employees) + 1
+        employee_data['date_added'] = datetime.now()
+        st.session_state.enhanced_employees.append(employee_data)
+    
+    def get_enhanced_employees_df(self):
+        """Return enhanced employees as DataFrame"""
+        if not st.session_state.enhanced_employees:
+            return pd.DataFrame()
+        return pd.DataFrame(st.session_state.enhanced_employees)
+    
+    def get_team_cost_summary(self):
+        """Get comprehensive team cost summary"""
+        enhanced_df = self.get_enhanced_employees_df()
+        
+        if enhanced_df.empty:
+            return {
+                'total_priced_salary': 0,
+                'total_current_salary': 0,
+                'total_monthly_hours': 0,
+                'average_hourly_rate': 0,
+                'team_size': 0,
+                'cost_variance': 0
+            }
+        
+        total_priced = enhanced_df['priced_salary'].sum()
+        total_current = enhanced_df['current_salary'].sum()
+        total_hours = enhanced_df['hours_per_month'].sum()
+        
+        return {
+            'total_priced_salary': total_priced,
+            'total_current_salary': total_current,
+            'total_monthly_hours': total_hours,
+            'average_hourly_rate': (total_current / 12 / total_hours) if total_hours > 0 else 0,
+            'team_size': len(enhanced_df),
+            'cost_variance': total_current - total_priced,
+            'cost_variance_pct': ((total_current - total_priced) / total_priced * 100) if total_priced > 0 else 0
+        }
