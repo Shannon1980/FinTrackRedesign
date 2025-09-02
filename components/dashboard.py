@@ -12,39 +12,108 @@ def render_dashboard():
     # Get financial summary
     financial_summary = st.session_state.data_manager.get_financial_summary()
     
-    # KPI Cards Row
+    # Enhanced KPI Cards with better styling
+    st.markdown("""
+    <style>
+    .metric-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 2px solid #e9ecef;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        margin-bottom: 1rem;
+        transition: transform 0.2s ease;
+    }
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    .metric-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .metric-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .metric-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    .metric-delta {
+        font-size: 0.85rem;
+        font-weight: 500;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        display: inline-block;
+    }
+    .budget-positive { color: #1e7e34; background-color: #d4edda; }
+    .budget-negative { color: #721c24; background-color: #f8d7da; }
+    .budget-warning { color: #856404; background-color: #fff3cd; }
+    .budget-neutral { color: #0c5460; background-color: #d1ecf1; }
+    </style>
+    """, unsafe_allow_html=True)
+    
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric(
-            label="💰 Total Budget",
-            value=f"${financial_summary['total_budget']:,.2f}",
-            delta=None
-        )
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-icon">💰</div>
+            <div class="metric-title">Total Budget</div>
+            <div class="metric-value" style="color: #007bff;">${financial_summary['total_budget']:,.0f}</div>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col2:
-        st.metric(
-            label="💸 Total Expenses", 
-            value=f"${financial_summary['total_expenses']:,.2f}",
-            delta=f"-{financial_summary['budget_utilization']:.1f}% of budget"
-        )
+        expense_color = "#dc3545" if financial_summary['total_expenses'] > 0 else "#6c757d"
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-icon">💸</div>
+            <div class="metric-title">Total Expenses</div>
+            <div class="metric-value" style="color: {expense_color};">${financial_summary['total_expenses']:,.0f}</div>
+            <div class="metric-delta budget-negative">{financial_summary['budget_utilization']:.1f}% of budget</div>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col3:
-        remaining_color = "normal" if financial_summary['remaining_budget'] >= 0 else "inverse"
-        st.metric(
-            label="💵 Remaining Budget",
-            value=f"${financial_summary['remaining_budget']:,.2f}",
-            delta=None
-        )
+        remaining_color = "#28a745" if financial_summary['remaining_budget'] >= 0 else "#dc3545"
+        remaining_class = "budget-positive" if financial_summary['remaining_budget'] >= 0 else "budget-negative"
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-icon">💵</div>
+            <div class="metric-title">Remaining Budget</div>
+            <div class="metric-value" style="color: {remaining_color};">${financial_summary['remaining_budget']:,.0f}</div>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col4:
-        utilization_delta = f"{financial_summary['budget_utilization']:.1f}%"
-        utilization_color = "normal" if financial_summary['budget_utilization'] <= 100 else "inverse"
-        st.metric(
-            label="📊 Budget Utilization",
-            value=f"{financial_summary['budget_utilization']:.1f}%",
-            delta=utilization_delta
-        )
+        if financial_summary['budget_utilization'] <= 70:
+            util_color = "#28a745"
+            util_class = "budget-positive"
+        elif financial_summary['budget_utilization'] <= 90:
+            util_color = "#ffc107"
+            util_class = "budget-warning"
+        else:
+            util_color = "#dc3545"
+            util_class = "budget-negative"
+            
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-icon">📊</div>
+            <div class="metric-title">Budget Utilization</div>
+            <div class="metric-value" style="color: {util_color};">{financial_summary['budget_utilization']:.1f}%</div>
+            <div class="metric-delta {util_class}">
+                {'On Track' if financial_summary['budget_utilization'] <= 85 else 'Monitor Closely' if financial_summary['budget_utilization'] <= 100 else 'Over Budget'}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
     st.markdown("---")
     
