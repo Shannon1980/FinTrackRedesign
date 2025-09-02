@@ -223,22 +223,23 @@
                             <table class="table table-hover">
                                 <thead class="table-dark">
                                     <tr>
+                                        <th>Employee ID</th>
                                         <th>Name</th>
                                         <th>Department</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
                                         <th>LCAT</th>
                                         <th>Experience</th>
                                         <th>Priced Salary</th>
                                         <th>Current Salary</th>
                                         <th>Hours/Month</th>
                                         <th>Bill Rate</th>
-                                        <th>Hourly Rate</th>
-                                        <th>Variance</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="employeeTable">
                                     <tr>
-                                        <td colspan="10" class="text-center text-muted">No employees found. Add some employees to get started.</td>
+                                        <td colspan="12" class="text-center text-muted">No employees found. Add some employees to get started.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -657,6 +658,7 @@
                                     <option value="Data Science">Data Science</option>
                                     <option value="Product Management">Product Management</option>
                                     <option value="Operations">Operations</option>
+                                    <option value="SEAS IT">SEAS IT</option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
@@ -669,6 +671,21 @@
                                     <option value="Senior Software Engineer (Sr. SWE)">Senior Software Engineer (Sr. SWE)</option>
                                     <option value="Software Engineer (SWE)">Software Engineer (SWE)</option>
                                     <option value="Junior Software Engineer (Jr. SWE)">Junior Software Engineer (Jr. SWE)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Role*</label>
+                                <select class="form-select" id="employeeRole" required>
+                                    <option value="">Select Role</option>
+                                    <option value="Employee">Employee</option>
+                                    <option value="Manager">Manager</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Status*</label>
+                                <select class="form-select" id="employeeStatus" required>
+                                    <option value="Active">Active</option>
+                                    <option value="Inactive">Inactive</option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">

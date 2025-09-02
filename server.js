@@ -92,6 +92,7 @@ const projectCostSchema = new mongoose.Schema({
 });
 
 const employeeSchema = new mongoose.Schema({
+    employee_id: { type: String, unique: true }, // Auto-generated unique ID
     employee_name: { type: String, required: true },
     department: { type: String, required: true },
     lcat: { type: String, required: true },
@@ -104,17 +105,28 @@ const employeeSchema = new mongoose.Schema({
     hourly_rate: { type: Number }, // Internal hourly cost
     start_date: { type: Date, required: true },
     end_date: { type: Date },
+    status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
+    role: { type: String, default: 'Employee' }, // Employee, Manager, etc.
     monthly_data: [monthlyDataSchema],
     notes: { type: String, default: '' },
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now }
 });
 
-// Calculate hourly rate before saving
+// Generate unique employee ID and calculate hourly rate before saving
 employeeSchema.pre('save', function(next) {
+    // Generate unique employee ID if not exists
+    if (!this.employee_id) {
+        const timestamp = Date.now().toString(36);
+        const random = Math.random().toString(36).substr(2, 5);
+        this.employee_id = `EMP-${timestamp}-${random}`.toUpperCase();
+    }
+    
+    // Calculate hourly rate
     if (this.current_salary && this.hours_per_month) {
         this.hourly_rate = this.current_salary / 12 / this.hours_per_month;
     }
+    
     this.updated_at = new Date();
     next();
 });
@@ -150,6 +162,7 @@ app.get('/api/employees', authMiddleware, async (req, res) => {
             const demoEmployees = [
                 {
                     _id: '1',
+                    employee_id: 'EMP-LZ9X2M4K-DEMO1',
                     employee_name: 'John Smith',
                     department: 'Engineering',
                     lcat: 'Solution Architect/Engineering Lead (SA/Eng Lead)',
@@ -161,6 +174,8 @@ app.get('/api/employees', authMiddleware, async (req, res) => {
                     bill_rate: 95,
                     hourly_rate: 56.64,
                     start_date: '2023-01-15',
+                    status: 'Active',
+                    role: 'Manager',
                     monthly_data: [
                         { month: '2024-01', hours: 168, revenue: 15960, actual_hours: 165, actual_revenue: 15675 },
                         { month: '2024-02', hours: 160, revenue: 15200, actual_hours: 158, actual_revenue: 15010 }
@@ -169,8 +184,9 @@ app.get('/api/employees', authMiddleware, async (req, res) => {
                 },
                 {
                     _id: '2',
+                    employee_id: 'EMP-MN8V3L7P-DEMO2',
                     employee_name: 'Sarah Johnson',
-                    department: 'Data Science',
+                    department: 'SEAS IT',
                     lcat: 'AI Engineering Lead (AI Lead)',
                     education_level: 'PhD',
                     years_experience: 6,
@@ -180,6 +196,8 @@ app.get('/api/employees', authMiddleware, async (req, res) => {
                     bill_rate: 85,
                     hourly_rate: 52.73,
                     start_date: '2023-03-01',
+                    status: 'Active',
+                    role: 'Employee',
                     monthly_data: [
                         { month: '2024-01', hours: 160, revenue: 13600, actual_hours: 162, actual_revenue: 13770 },
                         { month: '2024-02', hours: 160, revenue: 13600, actual_hours: 155, actual_revenue: 13175 }
@@ -202,6 +220,7 @@ app.get('/api/employees', authMiddleware, async (req, res) => {
         }
         
         if (active_only === 'true') {
+            filter.status = 'Active';
             filter.$or = [
                 { end_date: { $exists: false } },
                 { end_date: null },
@@ -415,7 +434,7 @@ app.get('/api/validation-options', async (req, res) => {
         // Return demo data if MongoDB is not connected
         if (mongoose.connection.readyState !== 1) {
             return res.json({
-                departments: ['Engineering', 'Data Science', 'Product Management', 'Operations'],
+                departments: ['Engineering', 'Data Science', 'Product Management', 'Operations', 'SEAS IT'],
                 lcats: [
                     'Program Manager (PM)',
                     'Solution Architect/Engineering Lead (SA/Eng Lead)',
@@ -424,7 +443,9 @@ app.get('/api/validation-options', async (req, res) => {
                     'Software Engineer (SWE)',
                     'Junior Software Engineer (Jr. SWE)'
                 ],
-                education_levels: ['High School', "Bachelor's Degree", "Master's Degree", 'PhD']
+                education_levels: ['High School', "Bachelor's Degree", "Master's Degree", 'PhD'],
+                roles: ['Employee', 'Manager'],
+                statuses: ['Active', 'Inactive']
             });
         }
         

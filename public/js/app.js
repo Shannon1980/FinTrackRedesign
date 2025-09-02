@@ -412,6 +412,8 @@ class FinancialTracker {
         const employeeData = {
             employee_name: document.getElementById('employeeName').value,
             department: document.getElementById('employeeDepartment').value,
+            role: document.getElementById('employeeRole').value,
+            status: document.getElementById('employeeStatus').value,
             lcat: document.getElementById('employeeLCAT').value,
             education_level: document.getElementById('employeeEducation').value,
             years_experience: parseInt(document.getElementById('employeeExperience').value),
@@ -656,7 +658,7 @@ class FinancialTracker {
         
         // Create header with monthly billing columns
         const baseHeaders = [
-            'Employee_Name', 'Department', 'LCAT', 'Education_Level', 'Years_Experience',
+            'Employee_Name', 'Department', 'Role', 'Status', 'LCAT', 'Education_Level', 'Years_Experience',
             'Priced_Salary', 'Current_Salary', 'Hours_Per_Month', 'Bill_Rate', 
             'Start_Date', 'End_Date', 'Notes'
         ];
