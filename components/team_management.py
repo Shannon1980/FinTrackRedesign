@@ -281,3 +281,385 @@ def render_team_analytics():
             )
             fig_salary.update_layout(xaxis_title="Salary ($)", yaxis_title="Number of Employees")
             st.plotly_chart(fig_salary, use_container_width=True)
+
+def render_import_team():
+    """Render team import functionality with template download"""
+    
+    st.markdown("### 📥 Import Team Members & Contractors")
+    st.markdown("Bulk import employees and contractors from Excel or CSV files")
+    
+    # Template Download Section
+    st.markdown("#### 📋 Download Template")
+    st.markdown("Download the employee template to ensure your data is formatted correctly")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("📊 Download Excel Template", type="primary", use_container_width=True):
+            excel_template = create_employee_template('excel')
+            st.download_button(
+                label="⬇️ Download Excel Template",
+                data=excel_template,
+                file_name=f"employee_template_{datetime.now().strftime('%Y%m%d')}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+    
+    with col2:
+        if st.button("📄 Download CSV Template", type="secondary", use_container_width=True):
+            csv_template = create_employee_template('csv')
+            st.download_button(
+                label="⬇️ Download CSV Template",
+                data=csv_template,
+                file_name=f"employee_template_{datetime.now().strftime('%Y%m%d')}.csv",
+                mime="text/csv"
+            )
+    
+    st.markdown("---")
+    
+    # File Upload Section
+    st.markdown("#### 📤 Upload Employee Data")
+    
+    uploaded_file = st.file_uploader(
+        "Choose your employee file",
+        type=['xlsx', 'xls', 'csv'],
+        help="Upload an Excel (.xlsx, .xls) or CSV file with employee data"
+    )
+    
+    if uploaded_file is not None:
+        try:
+            # Process the uploaded file
+            if uploaded_file.name.endswith(('.xlsx', '.xls')):
+                df = pd.read_excel(uploaded_file)
+            else:
+                df = pd.read_csv(uploaded_file)
+            
+            st.success(f"✅ File uploaded successfully! Found {len(df)} records")
+            
+            # Preview the data
+            st.markdown("#### 👀 Data Preview")
+            st.dataframe(df.head(10), use_container_width=True)
+            
+            # Validation and mapping
+            required_columns = ['employee_name', 'labor_category']
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            
+            if missing_columns:
+                st.error(f"❌ Missing required columns: {', '.join(missing_columns)}")
+                st.markdown("**Required columns:** employee_name, labor_category")
+                st.markdown("**Optional columns:** department, status, salary, start_date, location, manager, skills, notes")
+            else:
+                # Show validation results
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    valid_records = len(df.dropna(subset=required_columns))
+                    st.metric("✅ Valid Records", valid_records)
+                
+                with col2:
+                    invalid_records = len(df) - valid_records
+                    st.metric("❌ Invalid Records", invalid_records)
+                
+                with col3:
+                    new_records = len(df)
+                    st.metric("📥 New Records", new_records)
+                
+                # Import options
+                st.markdown("#### ⚙️ Import Options")
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    import_mode = st.selectbox(
+                        "Import Mode",
+                        ["Append to existing", "Replace all existing"],
+                        help="Choose whether to add to current team or replace all data"
+                    )
+                
+                with col2:
+                    validate_data = st.checkbox("Validate data before import", value=True)
+                
+                # Import button
+                if st.button("🚀 Import Employee Data", type="primary", use_container_width=True):
+                    if import_employees_from_dataframe(df, import_mode, validate_data):
+                        st.success(f"✅ Successfully imported {len(df)} employees!")
+                        st.rerun()
+                    else:
+                        st.error("❌ Import failed. Please check your data format.")
+        
+        except Exception as e:
+            st.error(f"❌ Error processing file: {str(e)}")
+            st.markdown("**Common issues:**")
+            st.markdown("- File format not supported")
+            st.markdown("- Missing required columns")
+            st.markdown("- Invalid data types")
+    
+    # Import Guidelines
+    st.markdown("---")
+    st.markdown("#### 📖 Import Guidelines")
+    
+    with st.expander("📋 Required Fields", expanded=False):
+        st.markdown("""
+        **Required columns:**
+        - `employee_name`: Full name of the employee/contractor
+        - `labor_category`: Job role (Senior Engineer, Junior Engineer, Project Manager, etc.)
+        
+        **Optional columns:**
+        - `department`: Department name (Engineering, Marketing, Sales, etc.)
+        - `status`: Employment status (Active, On Leave, Contractor, Part-time)
+        - `salary`: Annual salary in USD
+        - `start_date`: Employment start date (YYYY-MM-DD format)
+        - `location`: Work location (e.g., New York, Remote)
+        - `manager`: Direct manager name
+        - `skills`: Comma-separated list of skills
+        - `notes`: Additional notes or comments
+        """)
+    
+    with st.expander("💡 Tips for Successful Import", expanded=False):
+        st.markdown("""
+        1. **Use the template**: Download our template to ensure correct formatting
+        2. **Check data types**: Ensure salary is numeric, dates are in YYYY-MM-DD format
+        3. **Validate names**: Employee names should be unique
+        4. **Preview first**: Always review the data preview before importing
+        5. **Backup**: Export current data before doing a full replacement
+        """)
+
+def create_employee_template(format_type='excel'):
+    """Create an employee template file for download"""
+    
+    # Template data with sample entries
+    template_data = {
+        'employee_name': [
+            'John Smith', 
+            'Sarah Johnson', 
+            'Mike Chen',
+            'Emily Davis',
+            'Robert Wilson'
+        ],
+        'labor_category': [
+            'Senior Engineer',
+            'Project Manager', 
+            'Junior Engineer',
+            'Consultant',
+            'Contractor'
+        ],
+        'department': [
+            'Engineering',
+            'Operations',
+            'Engineering', 
+            'Finance',
+            'Marketing'
+        ],
+        'status': [
+            'Active',
+            'Active',
+            'Active',
+            'Contractor',
+            'Part-time'
+        ],
+        'salary': [
+            95000,
+            85000,
+            65000,
+            80000,
+            50000
+        ],
+        'start_date': [
+            '2024-01-15',
+            '2024-02-01',
+            '2024-03-01',
+            '2024-01-10',
+            '2024-04-15'
+        ],
+        'location': [
+            'New York',
+            'Remote',
+            'San Francisco',
+            'Remote',
+            'Chicago'
+        ],
+        'manager': [
+            'Alice Brown',
+            'David Lee',
+            'John Smith',
+            'Sarah Johnson',
+            'Emily Davis'
+        ],
+        'skills': [
+            'Python, React, AWS',
+            'Project Management, Agile, Scrum',
+            'JavaScript, Node.js, MongoDB',
+            'Financial Analysis, Excel, PowerBI',
+            'Digital Marketing, SEO, Analytics'
+        ],
+        'notes': [
+            'Lead developer for main product',
+            'PMP certified',
+            'Recent graduate, high potential',
+            'Specializes in cost analysis',
+            'Part-time social media specialist'
+        ]
+    }
+    
+    df = pd.DataFrame(template_data)
+    
+    if format_type == 'excel':
+        # Create Excel file with formatting
+        output = io.BytesIO()
+        
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='Employee_Template', index=False)
+            
+            # Get workbook and worksheet
+            workbook = writer.book
+            worksheet = writer.sheets['Employee_Template']
+            
+            # Style the header row
+            header_fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+            header_font = Font(color='FFFFFF', bold=True)
+            
+            for cell in worksheet[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal='center')
+            
+            # Auto-adjust column widths
+            for column in worksheet.columns:
+                max_length = 0
+                column_letter = column[0].column_letter
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = min(max_length + 2, 30)
+                worksheet.column_dimensions[column_letter].width = adjusted_width
+            
+            # Add instructions sheet
+            instructions_data = {
+                'Column': [
+                    'employee_name', 'labor_category', 'department', 'status', 'salary',
+                    'start_date', 'location', 'manager', 'skills', 'notes'
+                ],
+                'Required': [
+                    'Yes', 'Yes', 'No', 'No', 'No', 'No', 'No', 'No', 'No', 'No'
+                ],
+                'Description': [
+                    'Full name of employee/contractor',
+                    'Job role or position',
+                    'Department or division',
+                    'Employment status',
+                    'Annual salary in USD',
+                    'Start date (YYYY-MM-DD)',
+                    'Work location',
+                    'Direct manager name',
+                    'Comma-separated skills',
+                    'Additional notes'
+                ],
+                'Example': [
+                    'John Smith',
+                    'Senior Engineer',
+                    'Engineering',
+                    'Active',
+                    '75000',
+                    '2024-01-15',
+                    'New York',
+                    'Jane Doe',
+                    'Python, AWS, React',
+                    'Team lead'
+                ]
+            }
+            
+            instructions_df = pd.DataFrame(instructions_data)
+            instructions_df.to_excel(writer, sheet_name='Instructions', index=False)
+            
+            # Style instructions sheet
+            inst_sheet = writer.sheets['Instructions']
+            for cell in inst_sheet[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal='center')
+            
+            for column in inst_sheet.columns:
+                max_length = 0
+                column_letter = column[0].column_letter
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = min(max_length + 2, 40)
+                inst_sheet.column_dimensions[column_letter].width = adjusted_width
+        
+        output.seek(0)
+        return output.getvalue()
+    
+    else:  # CSV format
+        return df.to_csv(index=False)
+
+def import_employees_from_dataframe(df, import_mode, validate_data):
+    """Import employees from a pandas DataFrame"""
+    
+    try:
+        # Data validation
+        if validate_data:
+            # Check for required columns
+            required_columns = ['employee_name', 'labor_category']
+            if not all(col in df.columns for col in required_columns):
+                return False
+            
+            # Remove rows with missing required data
+            df = df.dropna(subset=required_columns)
+        
+        # Standardize column names and data
+        df = df.copy()
+        
+        # Ensure required columns exist with defaults
+        column_defaults = {
+            'department': 'Engineering',
+            'status': 'Active',
+            'salary': 75000,
+            'start_date': datetime.now().strftime('%Y-%m-%d'),
+            'location': 'Not specified',
+            'manager': 'Not assigned',
+            'skills': '',
+            'notes': ''
+        }
+        
+        for col, default_val in column_defaults.items():
+            if col not in df.columns:
+                df[col] = default_val
+            else:
+                df[col] = df[col].fillna(default_val)
+        
+        # Convert data types
+        if 'salary' in df.columns:
+            df['salary'] = pd.to_numeric(df['salary'], errors='coerce').fillna(75000)
+        
+        # Handle import mode
+        if import_mode == "Replace all existing":
+            st.session_state.employees = []
+        
+        # Convert DataFrame to employee records
+        for _, row in df.iterrows():
+            employee_data = {
+                'employee_name': str(row['employee_name']).strip(),
+                'labor_category': str(row['labor_category']).strip(),
+                'department': str(row['department']).strip(),
+                'status': str(row['status']).strip(),
+                'salary': float(row['salary']),
+                'start_date': pd.to_datetime(row['start_date']).date() if pd.notna(row['start_date']) else datetime.now().date(),
+                'location': str(row['location']).strip(),
+                'manager': str(row['manager']).strip(),
+                'skills': str(row['skills']).strip(),
+                'notes': str(row['notes']).strip()
+            }
+            
+            st.session_state.data_manager.add_employee(employee_data)
+        
+        return True
+        
+    except Exception as e:
+        st.error(f"Import error: {str(e)}")
+        return False
