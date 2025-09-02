@@ -2,7 +2,7 @@
 
 ## Overview
 
-SEAS Financial Tracker is a comprehensive project financial management platform built with Streamlit. The application provides professional-grade financial analytics, team management, and project oversight capabilities for organizations. It features a modern, Section 508 compliant interface with real-time dashboard analytics, budget tracking, team member management, and comprehensive reporting functionality.
+SEAS Financial Tracker is a comprehensive project financial management platform built with React/Node.js/Express/MongoDB stack. The application provides professional-grade financial analytics, team management, contract cost management, and project oversight capabilities for organizations. It features a modern interface with real-time dashboard analytics, monthly billing tracking, team member management, and comprehensive indirect cost management.
 
 ## User Preferences
 
@@ -11,42 +11,58 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### Frontend Architecture
-The application uses a modular Streamlit-based architecture with a component-driven design pattern. The main application (`app.py`) orchestrates multiple specialized components including dashboard overview, team management, analytics, and reports. The UI is organized into tabbed interfaces for intuitive navigation and features a responsive design with a collapsible sidebar for quick actions.
+The application uses a React-based single-page application architecture with Bootstrap for styling. The main interface (`public/index.html`) orchestrates multiple tabbed components including dashboard overview, team management, monthly billing, contract costs, and analytics. The UI is organized into intuitive navigation tabs with responsive design and real-time data updates.
 
-### Component Organization
-The system is structured into dedicated components:
-- **Dashboard Component**: Provides KPI metrics, financial summaries, and overview charts
-- **Team Management Component**: Handles employee data entry, team analytics, and member management with bulk import capabilities
-- **Contract Costs Component**: Manages ODC (Other Direct Costs), indirect costs (Fringe, Overhead, G&A), and profit/loss analysis
-- **Analytics Component**: Delivers comprehensive financial analytics, project performance metrics, and forecasting
-- **Reports Component**: Generates exportable reports and manages system settings
-- **Sidebar Component**: Offers quick access to project settings and financial parameters
+### Component Organization  
+The system is structured into dedicated tabs:
+- **Dashboard Component**: Provides employee overview, recent activity, and quick actions
+- **Team Management Component**: Handles employee data entry, team analytics, and member management with CSV import/export
+- **Monthly Billing Component**: Manages billing periods starting on 12th of month with working days calculation
+- **Contract Costs Component**: Manages ODC (Other Direct Costs), indirect costs (Fringe, Overhead, G&A), and total project costs
+- **Financial Projections Component**: Delivers comprehensive financial analytics, project performance metrics, and forecasting
+- **Analytics Component**: Provides advanced reporting and data visualization capabilities
+
+### Backend Architecture
+The application uses Node.js/Express backend with MongoDB for data persistence:
+- **Authentication**: JWT-based security with protected API endpoints
+- **Employee Management**: CRUD operations with monthly billing data embedded
+- **Contract Costs**: Separate collections for indirect costs and project costs with ODC tracking
+- **Demo Mode**: Fallback functionality when database is unavailable
 
 ### Data Management Layer
-The application employs a centralized `DataManager` class that handles all data operations through Streamlit's session state. This approach provides persistent data storage during user sessions and manages employee records, project settings, financial data, budget categories, ODC items, and indirect cost tracking. The data layer supports real-time updates and maintains data consistency across components.
+The backend employs MongoDB with Mongoose ODM for data operations. Key schemas include:
+- **Employee Schema**: Core employee data with embedded monthly billing records
+- **Indirect Cost Schema**: Annual rates for fringe, overhead, G&A, and profit
+- **Project Cost Schema**: Monthly cost summaries combining direct labor, ODCs, and indirect costs
+- **ODC Item Schema**: Categorized other direct costs with monthly tracking
 
-### Chart and Visualization System
-A dedicated `ChartHelpers` utility class manages all data visualization using Plotly for interactive charts and graphs. This includes budget allocation pie charts, budget vs actual comparison charts, and various financial analytics visualizations with consistent styling and color schemes.
-
-### Session State Management
-The application heavily relies on Streamlit's session state for data persistence, maintaining user preferences, project settings, employee records, and financial data throughout the user session. This eliminates the need for external database connections while providing a seamless user experience.
+### API Layer
+RESTful API endpoints handle all data operations:
+- Employee CRUD operations with CSV import/export
+- Monthly billing calculations with federal holiday exclusions
+- Contract cost management with real-time calculations
+- Bulk import functionality for indirect costs and ODC items
 
 ## External Dependencies
 
-### Core Framework
-- **Streamlit**: Primary web application framework for building the interactive interface
-- **Plotly Express & Graph Objects**: Data visualization library for creating interactive charts and graphs
+### Backend Framework
+- **Node.js/Express**: Server-side framework for API and web serving
+- **MongoDB/Mongoose**: Database and ODM for data persistence
+- **JWT**: Authentication and authorization security
 
 ### Data Processing
-- **Pandas**: Data manipulation and analysis library for handling employee records and financial data
-- **NumPy**: Numerical computing library for mathematical operations and data calculations
+- **Papa Parse**: CSV parsing library for import/export functionality
+- **Multer**: File upload handling for CSV imports
+- **bcryptjs**: Password hashing for secure authentication
 
-### UI/UX Enhancement
-- **Custom CSS**: Inline styling for enhanced visual appeal and professional appearance
-- **Bootstrap-inspired Design**: Color schemes and layout patterns following modern design principles
+### Frontend Framework
+- **Vanilla JavaScript**: Client-side functionality with ES6+ features
+- **Bootstrap 5**: Responsive UI framework with modern components
+- **Font Awesome**: Icon library for enhanced user experience
 
-### Development Dependencies
-- **datetime**: Built-in Python library for date and time operations
-- **json**: Built-in Python library for data serialization and configuration management
+### Security & Utilities
+- **CORS**: Cross-origin resource sharing configuration
+- **dotenv**: Environment variable management for secrets
+- **Federal Holidays**: Working days calculation excluding federal holidays
 
-The application is designed to be self-contained with minimal external dependencies, making it easy to deploy and maintain while providing enterprise-level functionality for financial project management.
+The application provides enterprise-level functionality for comprehensive project financial management with scalable architecture supporting both demo and production environments.

@@ -707,6 +707,49 @@ class FinancialTracker {
         this.showAlert('success', 'Employee template with monthly billing downloaded!');
     }
 
+    downloadIndirectCostTemplate() {
+        const csvContent = [
+            'Year,Fringe_Rate,Overhead_Rate,GA_Rate,Profit_Rate,Effective_Date,Notes',
+            '2025,25.5,40.0,8.5,5.0,2025-01-01,Standard rates for 2025',
+            '2024,25.0,38.5,8.0,4.5,2024-01-01,Previous year rates',
+            ',,,,,,',
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `indirect_costs_template_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        
+        this.showAlert('success', 'Indirect costs template downloaded!');
+    }
+
+    downloadOdcTemplate() {
+        const currentYear = new Date().getFullYear();
+        const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0');
+        
+        const csvContent = [
+            'Month,Category,Description,Amount,Notes',
+            `${currentYear}-${currentMonth},Travel,Client site visit,2500,Flight and hotel costs`,
+            `${currentYear}-${currentMonth},Software,Development tools license,1200,Annual subscription`,
+            `${currentYear}-${currentMonth},Equipment,Laptop for new hire,3200,MacBook Pro`,
+            `${currentYear}-${currentMonth},Subcontractor,External consultant,5000,Security audit specialist`,
+            ',,,,'
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `odc_template_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        
+        this.showAlert('success', 'ODC template downloaded!');
+    }
+
     // Financial projections
     async generateProjections() {
         const months = parseInt(document.getElementById('projectionMonths').value);
@@ -1116,6 +1159,291 @@ async function updateMonthlyBilling(employeeId, month) {
         console.error('Error updating monthly billing:', error);
         app.showAlert('danger', 'Error updating billing: ' + error.message);
     }
+
+    // Import functions for contract costs
+    async importData(endpoint, fileInputId, successMessage) {
+        const fileInput = document.getElementById(fileInputId);
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            this.showAlert('warning', 'Please select a file to import');
+            return;
+        }
+
+        if (!file.name.toLowerCase().endsWith('.csv')) {
+            this.showAlert('danger', 'Please select a CSV file');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            this.showAlert('info', 'Importing data, please wait...');
+            
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.authToken}`
+                },
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                this.showAlert('success', result.message);
+                fileInput.value = ''; // Clear file input
+                
+                // Show import details if there were errors
+                if (result.results && result.results.failed > 0) {
+                    console.log('Import errors:', result.results.errors);
+                    this.showAlert('warning', `${result.results.failed} records failed to import. Check console for details.`);
+                }
+            } else {
+                this.showAlert('danger', 'Import failed: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Import error:', error);
+            this.showAlert('danger', 'Import failed: ' + error.message);
+        }
+    }
+}
+
+// Contract Costs and ODC Management Functions
+let currentProjectCosts = null;
+
+async function loadIndirectCosts() {
+    const year = document.getElementById('indirectCostYear').value;
+    
+    try {
+        const response = await fetch(`/api/indirect-costs/${year}`, {
+            headers: { 'Authorization': `Bearer ${app.authToken}` }
+        });
+        
+        if (response.ok) {
+            const rates = await response.json();
+            document.getElementById('fringeRate').value = rates.fringe_rate;
+            document.getElementById('overheadRate').value = rates.overhead_rate;
+            document.getElementById('gaRate').value = rates.ga_rate;
+            document.getElementById('profitRate').value = rates.profit_rate || 0;
+            document.getElementById('effectiveDate').value = rates.effective_date ? rates.effective_date.split('T')[0] : '';
+            document.getElementById('indirectCostNotes').value = rates.notes || '';
+            
+            app.showAlert('success', 'Indirect cost rates loaded successfully');
+        } else {
+            app.showAlert('warning', 'No indirect cost rates found for this year');
+        }
+    } catch (error) {
+        console.error('Error loading indirect costs:', error);
+        app.showAlert('danger', 'Error loading indirect costs: ' + error.message);
+    }
+}
+
+async function saveIndirectCosts() {
+    const data = {
+        year: parseInt(document.getElementById('indirectCostYear').value),
+        fringe_rate: parseFloat(document.getElementById('fringeRate').value),
+        overhead_rate: parseFloat(document.getElementById('overheadRate').value),
+        ga_rate: parseFloat(document.getElementById('gaRate').value),
+        profit_rate: parseFloat(document.getElementById('profitRate').value) || 0,
+        effective_date: document.getElementById('effectiveDate').value,
+        notes: document.getElementById('indirectCostNotes').value
+    };
+    
+    try {
+        const response = await fetch('/api/indirect-costs', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${app.authToken}`
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            app.showAlert('success', 'Indirect cost rates saved successfully');
+        } else {
+            const error = await response.json();
+            app.showAlert('danger', 'Failed to save rates: ' + error.message);
+        }
+    } catch (error) {
+        console.error('Error saving indirect costs:', error);
+        app.showAlert('danger', 'Error saving rates: ' + error.message);
+    }
+}
+
+async function loadProjectCosts() {
+    const year = document.getElementById('costSummaryYear').value;
+    const month = document.getElementById('costSummaryMonth').value;
+    
+    try {
+        const response = await fetch(`/api/project-costs/${year}/${month}`, {
+            headers: { 'Authorization': `Bearer ${app.authToken}` }
+        });
+        
+        if (response.ok) {
+            const costs = await response.json();
+            currentProjectCosts = costs;
+            
+            // Update cost summary display
+            document.getElementById('directLaborCost').textContent = '$' + costs.direct_labor_cost.toLocaleString();
+            document.getElementById('totalOdcCost').textContent = '$' + costs.total_odc_cost.toLocaleString();
+            document.getElementById('fringeCost').textContent = '$' + costs.fringe_cost.toLocaleString();
+            document.getElementById('overheadCost').textContent = '$' + costs.overhead_cost.toLocaleString();
+            document.getElementById('gaCost').textContent = '$' + costs.ga_cost.toLocaleString();
+            document.getElementById('profitCost').textContent = '$' + costs.profit_cost.toLocaleString();
+            document.getElementById('totalProjectCost').textContent = '$' + costs.total_cost.toLocaleString();
+            
+            document.getElementById('costSummaryDisplay').style.display = 'block';
+            
+            // Update ODC table
+            renderOdcTable(costs.odc_items);
+            
+            app.showAlert('success', 'Project costs loaded successfully');
+        } else {
+            app.showAlert('warning', 'No project costs found for this period');
+        }
+    } catch (error) {
+        console.error('Error loading project costs:', error);
+        app.showAlert('danger', 'Error loading project costs: ' + error.message);
+    }
+}
+
+function renderOdcTable(odcItems) {
+    const tbody = document.getElementById('odcTable');
+    
+    if (!odcItems || odcItems.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No ODC items found. Add some to get started.</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = odcItems.map((item, index) => {
+        return `
+            <tr>
+                <td>${item.month}</td>
+                <td><span class="badge bg-primary">${item.category}</span></td>
+                <td>${item.description}</td>
+                <td>$${item.amount.toLocaleString()}</td>
+                <td>${item.notes || '-'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-danger" onclick="removeOdcItem('${item.month}', ${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function showAddOdcModal() {
+    // Set current month as default
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+    document.getElementById('odcMonth').value = currentMonth;
+    
+    // Clear form
+    document.getElementById('odcForm').reset();
+    document.getElementById('odcMonth').value = currentMonth;
+    
+    new bootstrap.Modal(document.getElementById('odcModal')).show();
+}
+
+async function saveOdcItem() {
+    const form = document.getElementById('odcForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const data = {
+        month: document.getElementById('odcMonth').value,
+        category: document.getElementById('odcCategory').value,
+        description: document.getElementById('odcDescription').value,
+        amount: parseFloat(document.getElementById('odcAmount').value),
+        notes: document.getElementById('odcNotes').value
+    };
+    
+    try {
+        const response = await fetch('/api/odc-items', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${app.authToken}`
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('odcModal')).hide();
+            app.showAlert('success', 'ODC item added successfully');
+            
+            // Refresh project costs if viewing the same month
+            const [year, month] = data.month.split('-');
+            const currentYear = document.getElementById('costSummaryYear').value;
+            const currentMonth = document.getElementById('costSummaryMonth').value;
+            
+            if (year === currentYear && parseInt(month) === parseInt(currentMonth)) {
+                await loadProjectCosts();
+            }
+        } else {
+            const error = await response.json();
+            app.showAlert('danger', 'Failed to add ODC item: ' + error.message);
+        }
+    } catch (error) {
+        console.error('Error adding ODC item:', error);
+        app.showAlert('danger', 'Error adding ODC item: ' + error.message);
+    }
+}
+
+async function removeOdcItem(month, itemIndex) {
+    if (!confirm('Are you sure you want to remove this ODC item?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/odc-items/${month}/${itemIndex}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${app.authToken}` }
+        });
+        
+        if (response.ok) {
+            app.showAlert('success', 'ODC item removed successfully');
+            
+            // Refresh project costs
+            const [year, monthNum] = month.split('-');
+            const currentYear = document.getElementById('costSummaryYear').value;
+            const currentMonth = document.getElementById('costSummaryMonth').value;
+            
+            if (year === currentYear && parseInt(monthNum) === parseInt(currentMonth)) {
+                await loadProjectCosts();
+            }
+        } else {
+            const error = await response.json();
+            app.showAlert('danger', 'Failed to remove ODC item: ' + error.message);
+        }
+    } catch (error) {
+        console.error('Error removing ODC item:', error);
+        app.showAlert('danger', 'Error removing ODC item: ' + error.message);
+    }
+}
+
+// Global import functions for contract costs
+async function importIndirectCosts() {
+    await app.importData('/api/import/indirect-costs', 'indirectCostFile', 'Indirect costs imported successfully');
+    
+    // Reload current year's rates
+    await loadIndirectCosts();
+}
+
+async function importOdcItems() {
+    await app.importData('/api/import/odc-items', 'odcFile', 'ODC items imported successfully');
+    
+    // Refresh current project costs view if loaded
+    const costDisplay = document.getElementById('costSummaryDisplay');
+    if (costDisplay.style.display !== 'none') {
+        await loadProjectCosts();
+    }
 }
 
 // Initialize app when DOM is loaded
@@ -1126,4 +1454,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const now = new Date();
     document.getElementById('billingYear').value = now.getFullYear();
     document.getElementById('billingMonth').value = now.getMonth() + 1;
+    
+    // Set defaults for contract costs
+    document.getElementById('indirectCostYear').value = now.getFullYear();
+    document.getElementById('costSummaryYear').value = now.getFullYear();
+    document.getElementById('costSummaryMonth').value = now.getMonth() + 1;
+    document.getElementById('effectiveDate').value = `${now.getFullYear()}-01-01`;
 });

@@ -53,6 +53,43 @@ const monthlyDataSchema = new mongoose.Schema({
     actual_revenue: { type: Number, default: 0 }
 }, { _id: false });
 
+// ODC (Other Direct Costs) schema for monthly tracking
+const odcItemSchema = new mongoose.Schema({
+    month: { type: String, required: true }, // Format: "YYYY-MM"
+    category: { type: String, required: true }, // e.g., "Travel", "Equipment", "Software", "Subcontractor"
+    description: { type: String, required: true },
+    amount: { type: Number, required: true },
+    notes: { type: String, default: '' }
+}, { _id: false });
+
+// Indirect cost rates schema
+const indirectCostSchema = new mongoose.Schema({
+    year: { type: Number, required: true },
+    fringe_rate: { type: Number, required: true }, // Percentage (e.g., 25.5 for 25.5%)
+    overhead_rate: { type: Number, required: true }, // Percentage
+    ga_rate: { type: Number, required: true }, // G&A rate percentage
+    profit_rate: { type: Number, default: 0 }, // Profit rate percentage
+    effective_date: { type: Date, required: true },
+    notes: { type: String, default: '' },
+    created_at: { type: Date, default: Date.now }
+});
+
+// Project costs schema combining direct labor, ODCs, and indirect costs
+const projectCostSchema = new mongoose.Schema({
+    month: { type: String, required: true }, // Format: "YYYY-MM"
+    direct_labor_cost: { type: Number, default: 0 },
+    direct_labor_hours: { type: Number, default: 0 },
+    odc_items: [odcItemSchema],
+    total_odc_cost: { type: Number, default: 0 },
+    fringe_cost: { type: Number, default: 0 },
+    overhead_cost: { type: Number, default: 0 },
+    ga_cost: { type: Number, default: 0 },
+    profit_cost: { type: Number, default: 0 },
+    total_cost: { type: Number, default: 0 },
+    created_at: { type: Date, default: Date.now },
+    updated_at: { type: Date, default: Date.now }
+});
+
 const employeeSchema = new mongoose.Schema({
     employee_name: { type: String, required: true },
     department: { type: String, required: true },
@@ -82,6 +119,8 @@ employeeSchema.pre('save', function(next) {
 });
 
 const Employee = mongoose.model('Employee', employeeSchema);
+const IndirectCost = mongoose.model('IndirectCost', indirectCostSchema);
+const ProjectCost = mongoose.model('ProjectCost', projectCostSchema);
 
 // JWT Middleware for protected routes
 const authMiddleware = (req, res, next) => {
@@ -684,6 +723,432 @@ app.get('/api/monthly-billing-summary/:year/:month', authMiddleware, async (req,
         });
     } catch (error) {
         console.error('Error fetching monthly billing summary:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// GET /api/indirect-costs/:year - Get indirect cost rates for a year
+app.get('/api/indirect-costs/:year', authMiddleware, async (req, res) => {
+    try {
+        const year = parseInt(req.params.year);
+        
+        // Demo data for when MongoDB is not connected
+        if (mongoose.connection.readyState !== 1) {
+            const demoRates = {
+                year: year,
+                fringe_rate: 25.5,
+                overhead_rate: 40.0,
+                ga_rate: 8.5,
+                profit_rate: 5.0,
+                effective_date: `${year}-01-01`,
+                notes: 'Demo indirect cost rates'
+            };
+            return res.json(demoRates);
+        }
+        
+        const indirectCost = await IndirectCost.findOne({ year }).sort({ effective_date: -1 });
+        if (!indirectCost) {
+            return res.status(404).json({ message: 'Indirect cost rates not found for this year' });
+        }
+        
+        res.json(indirectCost);
+    } catch (error) {
+        console.error('Error fetching indirect costs:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// POST /api/indirect-costs - Create or update indirect cost rates
+app.post('/api/indirect-costs', authMiddleware, async (req, res) => {
+    try {
+        const { year, fringe_rate, overhead_rate, ga_rate, profit_rate, effective_date, notes } = req.body;
+        
+        // Demo mode simulation
+        if (mongoose.connection.readyState !== 1) {
+            return res.json({
+                message: 'Indirect cost rates updated successfully (demo mode)',
+                data: { year, fringe_rate, overhead_rate, ga_rate, profit_rate }
+            });
+        }
+        
+        const indirectCostData = {
+            year,
+            fringe_rate,
+            overhead_rate,
+            ga_rate,
+            profit_rate: profit_rate || 0,
+            effective_date: new Date(effective_date),
+            notes: notes || ''
+        };
+        
+        // Update existing or create new
+        const indirectCost = await IndirectCost.findOneAndUpdate(
+            { year },
+            indirectCostData,
+            { upsert: true, new: true, runValidators: true }
+        );
+        
+        res.json({ message: 'Indirect cost rates saved successfully', data: indirectCost });
+    } catch (error) {
+        console.error('Error saving indirect costs:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// GET /api/project-costs/:year/:month - Get project costs for a specific month
+app.get('/api/project-costs/:year/:month', authMiddleware, async (req, res) => {
+    try {
+        const year = parseInt(req.params.year);
+        const month = parseInt(req.params.month);
+        const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
+        
+        // Demo data for when MongoDB is not connected
+        if (mongoose.connection.readyState !== 1) {
+            const demoProjectCost = {
+                month: monthKey,
+                direct_labor_cost: 28800,
+                direct_labor_hours: 320,
+                odc_items: [
+                    { month: monthKey, category: 'Travel', description: 'Client site visit', amount: 2500, notes: 'Flight and hotel' },
+                    { month: monthKey, category: 'Software', description: 'Development tools license', amount: 1200, notes: 'Annual subscription' },
+                    { month: monthKey, category: 'Equipment', description: 'Laptop for new hire', amount: 3200, notes: 'MacBook Pro' }
+                ],
+                total_odc_cost: 6900,
+                fringe_cost: 7344, // 25.5% of direct labor
+                overhead_cost: 11520, // 40% of direct labor
+                ga_cost: 2448, // 8.5% of direct labor
+                profit_cost: 1440, // 5% of direct labor
+                total_cost: 58452
+            };
+            return res.json(demoProjectCost);
+        }
+        
+        let projectCost = await ProjectCost.findOne({ month: monthKey });
+        
+        if (!projectCost) {
+            // Calculate from current data if not exists
+            projectCost = await calculateProjectCosts(year, month);
+        }
+        
+        res.json(projectCost);
+    } catch (error) {
+        console.error('Error fetching project costs:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// POST /api/odc-items - Add ODC item
+app.post('/api/odc-items', authMiddleware, async (req, res) => {
+    try {
+        const { month, category, description, amount, notes } = req.body;
+        
+        // Demo mode simulation
+        if (mongoose.connection.readyState !== 1) {
+            return res.json({
+                message: 'ODC item added successfully (demo mode)',
+                data: { month, category, description, amount, notes }
+            });
+        }
+        
+        let projectCost = await ProjectCost.findOne({ month });
+        
+        if (!projectCost) {
+            projectCost = new ProjectCost({ month, odc_items: [] });
+        }
+        
+        // Add new ODC item
+        projectCost.odc_items.push({
+            month,
+            category,
+            description,
+            amount: parseFloat(amount),
+            notes: notes || ''
+        });
+        
+        // Recalculate total ODC cost
+        projectCost.total_odc_cost = projectCost.odc_items.reduce((sum, item) => sum + item.amount, 0);
+        
+        // Recalculate total project cost
+        await recalculateProjectCost(projectCost);
+        
+        await projectCost.save();
+        res.json({ message: 'ODC item added successfully', data: projectCost });
+    } catch (error) {
+        console.error('Error adding ODC item:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// DELETE /api/odc-items/:projectCostId/:odcItemId - Remove ODC item
+app.delete('/api/odc-items/:month/:itemIndex', authMiddleware, async (req, res) => {
+    try {
+        const { month, itemIndex } = req.params;
+        
+        // Demo mode simulation
+        if (mongoose.connection.readyState !== 1) {
+            return res.json({ message: 'ODC item removed successfully (demo mode)' });
+        }
+        
+        const projectCost = await ProjectCost.findOne({ month });
+        if (!projectCost) {
+            return res.status(404).json({ message: 'Project cost record not found' });
+        }
+        
+        // Remove ODC item by index
+        const index = parseInt(itemIndex);
+        if (index >= 0 && index < projectCost.odc_items.length) {
+            projectCost.odc_items.splice(index, 1);
+            
+            // Recalculate total ODC cost
+            projectCost.total_odc_cost = projectCost.odc_items.reduce((sum, item) => sum + item.amount, 0);
+            
+            // Recalculate total project cost
+            await recalculateProjectCost(projectCost);
+            
+            await projectCost.save();
+            res.json({ message: 'ODC item removed successfully', data: projectCost });
+        } else {
+            res.status(400).json({ message: 'Invalid ODC item index' });
+        }
+    } catch (error) {
+        console.error('Error removing ODC item:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// Utility function to calculate project costs
+async function calculateProjectCosts(year, month) {
+    const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
+    
+    // Get employees active in this month
+    const employees = await Employee.find({
+        $or: [
+            { end_date: { $exists: false } },
+            { end_date: null },
+            { end_date: { $gte: new Date(year, month - 1, 1) } }
+        ]
+    });
+    
+    let directLaborCost = 0;
+    let directLaborHours = 0;
+    
+    employees.forEach(employee => {
+        const monthlyData = employee.monthly_data.find(data => data.month === monthKey);
+        const actualHours = monthlyData?.actual_hours || employee.hours_per_month || 160;
+        const hourlyCost = employee.hourly_rate || (employee.current_salary / 12 / (employee.hours_per_month || 160));
+        
+        directLaborHours += actualHours;
+        directLaborCost += actualHours * hourlyCost;
+    });
+    
+    // Get indirect cost rates
+    const indirectRates = await IndirectCost.findOne({ year }).sort({ effective_date: -1 });
+    const fringeRate = indirectRates?.fringe_rate || 25.5;
+    const overheadRate = indirectRates?.overhead_rate || 40.0;
+    const gaRate = indirectRates?.ga_rate || 8.5;
+    const profitRate = indirectRates?.profit_rate || 5.0;
+    
+    const fringeCost = directLaborCost * (fringeRate / 100);
+    const overheadCost = directLaborCost * (overheadRate / 100);
+    const gaCost = directLaborCost * (gaRate / 100);
+    const profitCost = directLaborCost * (profitRate / 100);
+    
+    return {
+        month: monthKey,
+        direct_labor_cost: directLaborCost,
+        direct_labor_hours: directLaborHours,
+        odc_items: [],
+        total_odc_cost: 0,
+        fringe_cost: fringeCost,
+        overhead_cost: overheadCost,
+        ga_cost: gaCost,
+        profit_cost: profitCost,
+        total_cost: directLaborCost + fringeCost + overheadCost + gaCost + profitCost
+    };
+}
+
+// Utility function to recalculate project cost totals
+async function recalculateProjectCost(projectCost) {
+    const [year, month] = projectCost.month.split('-');
+    const indirectRates = await IndirectCost.findOne({ year: parseInt(year) }).sort({ effective_date: -1 });
+    
+    const fringeRate = indirectRates?.fringe_rate || 25.5;
+    const overheadRate = indirectRates?.overhead_rate || 40.0;
+    const gaRate = indirectRates?.ga_rate || 8.5;
+    const profitRate = indirectRates?.profit_rate || 5.0;
+    
+    projectCost.fringe_cost = projectCost.direct_labor_cost * (fringeRate / 100);
+    projectCost.overhead_cost = projectCost.direct_labor_cost * (overheadRate / 100);
+    projectCost.ga_cost = projectCost.direct_labor_cost * (gaRate / 100);
+    projectCost.profit_cost = projectCost.direct_labor_cost * (profitRate / 100);
+    
+    projectCost.total_cost = projectCost.direct_labor_cost + 
+                            projectCost.total_odc_cost + 
+                            projectCost.fringe_cost + 
+                            projectCost.overhead_cost + 
+                            projectCost.ga_cost + 
+                            projectCost.profit_cost;
+}
+
+// POST /api/import/indirect-costs - Bulk import indirect costs from CSV
+app.post('/api/import/indirect-costs', authMiddleware, upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        const csvText = req.file.buffer.toString();
+        const records = Papa.parse(csvText, {
+            header: true,
+            skipEmptyLines: true,
+            transformHeader: (header) => header.trim()
+        });
+
+        if (records.errors.length > 0) {
+            return res.status(400).json({ 
+                message: 'CSV parsing error', 
+                errors: records.errors 
+            });
+        }
+
+        const importResults = {
+            successful: 0,
+            failed: 0,
+            errors: []
+        };
+
+        // Demo mode simulation
+        if (mongoose.connection.readyState !== 1) {
+            importResults.successful = records.data.length;
+            return res.json({
+                message: `Successfully imported ${importResults.successful} indirect cost records (demo mode)`,
+                results: importResults
+            });
+        }
+
+        // Process each record
+        for (const [index, record] of records.data.entries()) {
+            try {
+                if (!record.Year || !record.Fringe_Rate || !record.Overhead_Rate || !record.GA_Rate) {
+                    importResults.failed++;
+                    importResults.errors.push(`Row ${index + 2}: Missing required fields`);
+                    continue;
+                }
+
+                const indirectCostData = {
+                    year: parseInt(record.Year),
+                    fringe_rate: parseFloat(record.Fringe_Rate),
+                    overhead_rate: parseFloat(record.Overhead_Rate),
+                    ga_rate: parseFloat(record.GA_Rate),
+                    profit_rate: parseFloat(record.Profit_Rate) || 0,
+                    effective_date: new Date(record.Effective_Date || `${record.Year}-01-01`),
+                    notes: record.Notes || ''
+                };
+
+                // Update existing or create new
+                await IndirectCost.findOneAndUpdate(
+                    { year: indirectCostData.year },
+                    indirectCostData,
+                    { upsert: true, new: true, runValidators: true }
+                );
+
+                importResults.successful++;
+            } catch (error) {
+                importResults.failed++;
+                importResults.errors.push(`Row ${index + 2}: ${error.message}`);
+            }
+        }
+
+        const message = `Import completed: ${importResults.successful} successful, ${importResults.failed} failed`;
+        res.json({ message, results: importResults });
+
+    } catch (error) {
+        console.error('Error importing indirect costs:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// POST /api/import/odc-items - Bulk import ODC items from CSV
+app.post('/api/import/odc-items', authMiddleware, upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        const csvText = req.file.buffer.toString();
+        const records = Papa.parse(csvText, {
+            header: true,
+            skipEmptyLines: true,
+            transformHeader: (header) => header.trim()
+        });
+
+        if (records.errors.length > 0) {
+            return res.status(400).json({ 
+                message: 'CSV parsing error', 
+                errors: records.errors 
+            });
+        }
+
+        const importResults = {
+            successful: 0,
+            failed: 0,
+            errors: []
+        };
+
+        // Demo mode simulation
+        if (mongoose.connection.readyState !== 1) {
+            importResults.successful = records.data.length;
+            return res.json({
+                message: `Successfully imported ${importResults.successful} ODC items (demo mode)`,
+                results: importResults
+            });
+        }
+
+        // Process each record
+        for (const [index, record] of records.data.entries()) {
+            try {
+                if (!record.Month || !record.Category || !record.Description || !record.Amount) {
+                    importResults.failed++;
+                    importResults.errors.push(`Row ${index + 2}: Missing required fields`);
+                    continue;
+                }
+
+                const month = record.Month;
+                let projectCost = await ProjectCost.findOne({ month });
+                
+                if (!projectCost) {
+                    projectCost = new ProjectCost({ month, odc_items: [] });
+                }
+
+                // Add new ODC item
+                projectCost.odc_items.push({
+                    month: month,
+                    category: record.Category,
+                    description: record.Description,
+                    amount: parseFloat(record.Amount),
+                    notes: record.Notes || ''
+                });
+
+                // Recalculate total ODC cost
+                projectCost.total_odc_cost = projectCost.odc_items.reduce((sum, item) => sum + item.amount, 0);
+                
+                // Recalculate total project cost
+                await recalculateProjectCost(projectCost);
+                
+                await projectCost.save();
+                importResults.successful++;
+
+            } catch (error) {
+                importResults.failed++;
+                importResults.errors.push(`Row ${index + 2}: ${error.message}`);
+            }
+        }
+
+        const message = `Import completed: ${importResults.successful} successful, ${importResults.failed} failed`;
+        res.json({ message, results: importResults });
+
+    } catch (error) {
+        console.error('Error importing ODC items:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
