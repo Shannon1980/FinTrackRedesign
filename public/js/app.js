@@ -375,7 +375,7 @@ class FinancialTracker {
             
             return `
                 <tr>
-                    <td><code>${emp.employee_id || emp._id}</code></td>
+                    <td>${emp.employee_id || emp._id}</td>
                     <td><strong>${emp.employee_name}</strong></td>
                     <td><span class="badge bg-secondary">${emp.department}</span></td>
                     <td><span class="badge ${emp.role === 'Manager' ? 'bg-primary' : 'bg-info'}">${emp.role || 'Employee'}</span></td>
