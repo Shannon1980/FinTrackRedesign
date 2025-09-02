@@ -323,7 +323,7 @@ class FinancialTracker {
         tbody.innerHTML = this.employees.map(emp => {
             const variance = (emp.current_salary || 0) - (emp.priced_salary || 0);
             const varianceClass = variance >= 0 ? 'text-danger' : 'text-success';
-            const hourlyRate = emp.hourly_rate || (emp.current_salary / 12 / emp.hours_per_month);
+            const hourlyRate = emp.hourly_rate || (emp.current_salary / 12 / 160);
             
             return `
                 <tr>
@@ -333,7 +333,6 @@ class FinancialTracker {
                     <td>${emp.years_experience} years</td>
                     <td>$${(emp.priced_salary || 0).toLocaleString()}</td>
                     <td>$${(emp.current_salary || 0).toLocaleString()}</td>
-                    <td>${emp.hours_per_month || 160}</td>
                     <td>$${(emp.bill_rate || 0).toFixed(2)}</td>
                     <td>$${hourlyRate.toFixed(2)}</td>
                     <td class="${varianceClass}">$${variance.toLocaleString()}</td>
@@ -353,7 +352,7 @@ class FinancialTracker {
     updateSummaryCards() {
         const teamSize = this.employees.length;
         const totalSalary = this.employees.reduce((sum, emp) => sum + (emp.current_salary || 0), 0);
-        const totalHours = this.employees.reduce((sum, emp) => sum + (emp.hours_per_month || 0), 0);
+        const totalHours = this.employees.reduce((sum, emp) => sum + 160, 0);
         const totalPriced = this.employees.reduce((sum, emp) => sum + (emp.priced_salary || 0), 0);
         const costVariance = totalSalary - totalPriced;
 
@@ -419,7 +418,6 @@ class FinancialTracker {
             years_experience: parseInt(document.getElementById('employeeExperience').value),
             priced_salary: parseFloat(document.getElementById('employeePricedSalary').value),
             current_salary: parseFloat(document.getElementById('employeeCurrentSalary').value),
-            hours_per_month: parseFloat(document.getElementById('employeeHours').value),
             bill_rate: parseFloat(document.getElementById('employeeBillRate').value),
             start_date: document.getElementById('employeeStartDate').value,
             end_date: document.getElementById('employeeEndDate').value || null,
@@ -503,7 +501,7 @@ class FinancialTracker {
                 const headers = lines[0].split(',').map(h => h.trim());
                 
                 // Validate headers
-                const requiredHeaders = ['Employee_Name', 'Department', 'LCAT', 'Education_Level', 'Years_Experience', 'Priced_Salary', 'Current_Salary', 'Hours_Per_Month', 'Bill_Rate'];
+                const requiredHeaders = ['Employee_Name', 'Department', 'LCAT', 'Education_Level', 'Years_Experience', 'Priced_Salary', 'Current_Salary', 'Bill_Rate'];
                 const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
                 
                 if (missingHeaders.length > 0) {
@@ -552,9 +550,6 @@ class FinancialTracker {
                                     break;
                                 case 'Current_Salary':
                                     employee.current_salary = parseFloat(value) || 0;
-                                    break;
-                                case 'Hours_Per_Month':
-                                    employee.hours_per_month = parseFloat(value) || 160;
                                     break;
                                 case 'Bill_Rate':
                                     employee.bill_rate = parseFloat(value) || 0;
@@ -623,7 +618,7 @@ class FinancialTracker {
 
     exportCSV() {
         const csvContent = [
-            'Employee_Name,Department,LCAT,Education_Level,Years_Experience,Priced_Salary,Current_Salary,Hours_Per_Month,Bill_Rate,Start_Date,End_Date,Notes',
+            'Employee_Name,Department,LCAT,Education_Level,Years_Experience,Priced_Salary,Current_Salary,Bill_Rate,Start_Date,End_Date,Notes',
             ...this.employees.map(emp => [
                 emp.employee_name,
                 emp.department,
@@ -632,7 +627,6 @@ class FinancialTracker {
                 emp.years_experience,
                 emp.priced_salary,
                 emp.current_salary,
-                emp.hours_per_month,
                 emp.bill_rate || 0,
                 emp.start_date,
                 emp.end_date || '',
@@ -659,7 +653,7 @@ class FinancialTracker {
         // Create header with monthly billing columns
         const baseHeaders = [
             'Employee_Name', 'Department', 'Role', 'Status', 'LCAT', 'Education_Level', 'Years_Experience',
-            'Priced_Salary', 'Current_Salary', 'Hours_Per_Month', 'Bill_Rate', 
+            'Priced_Salary', 'Current_Salary', 'Bill_Rate', 
             'Start_Date', 'End_Date', 'Notes'
         ];
         
@@ -777,7 +771,7 @@ class FinancialTracker {
             const projectionDate = new Date(currentDate);
             projectionDate.setMonth(projectionDate.getMonth() + i);
             
-            let totalHours = this.employees.reduce((sum, emp) => sum + (emp.hours_per_month || 160), 0);
+            let totalHours = this.employees.reduce((sum, emp) => sum + 160, 0);
             let totalRevenue = this.employees.reduce((sum, emp) => {
                 const adjustedSalary = (emp.current_salary || 0) * Math.pow(1 + salaryIncrease / 100, i / 12);
                 return sum + (adjustedSalary / 12);
