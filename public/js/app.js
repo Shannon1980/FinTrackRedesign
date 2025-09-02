@@ -215,8 +215,11 @@ class FinancialTracker {
         this.employees = [
             {
                 _id: '1',
+                employee_id: 'EMP-2023011501-A1B2',
                 employee_name: 'John Smith',
                 department: 'Engineering',
+                role: 'Manager',
+                status: 'Active',
                 lcat: 'Solution Architect/Engineering Lead (SA/Eng Lead)',
                 education_level: "Master's Degree",
                 years_experience: 8,
@@ -230,8 +233,11 @@ class FinancialTracker {
             },
             {
                 _id: '2',
+                employee_id: 'EMP-2023030101-C3D4',
                 employee_name: 'Sarah Johnson',
                 department: 'Data Science',
+                role: 'Employee',
+                status: 'Active',
                 lcat: 'AI Engineering Lead (AI Lead)',
                 education_level: 'PhD',
                 years_experience: 6,
@@ -245,8 +251,11 @@ class FinancialTracker {
             },
             {
                 _id: '3',
+                employee_id: 'EMP-2023060101-E5F6',
                 employee_name: 'Mike Wilson',
                 department: 'Engineering',
+                role: 'Employee',
+                status: 'Active',
                 lcat: 'Senior Software Engineer (Sr. SWE)',
                 education_level: "Bachelor's Degree",
                 years_experience: 5,
@@ -355,7 +364,7 @@ class FinancialTracker {
         const tbody = document.getElementById('employeeTable');
         
         if (this.employees.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No employees found. Add some employees to get started.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">No employees found. Add some employees to get started.</td></tr>';
             return;
         }
 
@@ -366,15 +375,16 @@ class FinancialTracker {
             
             return `
                 <tr>
+                    <td><code>${emp.employee_id || emp._id}</code></td>
                     <td><strong>${emp.employee_name}</strong></td>
                     <td><span class="badge bg-secondary">${emp.department}</span></td>
+                    <td><span class="badge ${emp.role === 'Manager' ? 'bg-primary' : 'bg-info'}">${emp.role || 'Employee'}</span></td>
+                    <td><span class="badge ${emp.status === 'Active' ? 'bg-success' : 'bg-secondary'}">${emp.status || 'Active'}</span></td>
                     <td><small>${emp.lcat}</small></td>
                     <td>${emp.years_experience} years</td>
                     <td>$${(emp.priced_salary || 0).toLocaleString()}</td>
                     <td>$${(emp.current_salary || 0).toLocaleString()}</td>
                     <td>$${(emp.bill_rate || 0).toFixed(2)}</td>
-                    <td>$${hourlyRate.toFixed(2)}</td>
-                    <td class="${varianceClass}">$${variance.toLocaleString()}</td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary me-1" onclick="app.editEmployee('${emp._id}')">
                             <i class="fas fa-edit"></i>
