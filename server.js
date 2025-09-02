@@ -468,6 +468,12 @@ app.get('/api/validation-options', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { username, password } = req.body;
+        console.log('Login attempt:', { 
+            username: JSON.stringify(username), 
+            password: JSON.stringify(password),
+            usernameLength: username?.length,
+            passwordLength: password?.length
+        });
         
         // Simple auth for development - in production, use proper authentication
         if (username === 'admin' && password === 'admin123') {

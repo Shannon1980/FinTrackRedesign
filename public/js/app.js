@@ -34,9 +34,29 @@ class FinancialTracker {
 
     // Authentication methods
     async login() {
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
+        const usernameEl = document.getElementById('username');
+        const passwordEl = document.getElementById('password');
         const errorDiv = document.getElementById('loginError');
+        
+        if (!usernameEl || !passwordEl) {
+            console.error('Login form elements not found:', { usernameEl, passwordEl });
+            if (errorDiv) {
+                errorDiv.textContent = 'Login form error. Please refresh the page.';
+                errorDiv.style.display = 'block';
+            }
+            return;
+        }
+        
+        const username = usernameEl.value.trim();
+        const password = passwordEl.value.trim();
+        
+        if (!username || !password) {
+            if (errorDiv) {
+                errorDiv.textContent = 'Please enter both username and password';
+                errorDiv.style.display = 'block';
+            }
+            return;
+        }
         
         try {
             this.showLoading(true);
