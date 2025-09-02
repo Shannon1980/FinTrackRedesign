@@ -16,13 +16,14 @@ The application uses a modular Streamlit-based architecture with a component-dri
 ### Component Organization
 The system is structured into dedicated components:
 - **Dashboard Component**: Provides KPI metrics, financial summaries, and overview charts
-- **Team Management Component**: Handles employee data entry, team analytics, and member management
+- **Team Management Component**: Handles employee data entry, team analytics, and member management with bulk import capabilities
+- **Contract Costs Component**: Manages ODC (Other Direct Costs), indirect costs (Fringe, Overhead, G&A), and profit/loss analysis
 - **Analytics Component**: Delivers comprehensive financial analytics, project performance metrics, and forecasting
 - **Reports Component**: Generates exportable reports and manages system settings
 - **Sidebar Component**: Offers quick access to project settings and financial parameters
 
 ### Data Management Layer
-The application employs a centralized `DataManager` class that handles all data operations through Streamlit's session state. This approach provides persistent data storage during user sessions and manages employee records, project settings, financial data, and budget categories. The data layer supports real-time updates and maintains data consistency across components.
+The application employs a centralized `DataManager` class that handles all data operations through Streamlit's session state. This approach provides persistent data storage during user sessions and manages employee records, project settings, financial data, budget categories, ODC items, and indirect cost tracking. The data layer supports real-time updates and maintains data consistency across components.
 
 ### Chart and Visualization System
 A dedicated `ChartHelpers` utility class manages all data visualization using Plotly for interactive charts and graphs. This includes budget allocation pie charts, budget vs actual comparison charts, and various financial analytics visualizations with consistent styling and color schemes.
