@@ -174,10 +174,13 @@
                             <button class="btn btn-success btn-sm me-2" onclick="showAddEmployee()">
                                 <i class="fas fa-plus me-1"></i> Add Employee
                             </button>
-                            <button class="btn btn-info btn-sm me-2" onclick="importCSV()">
+                            <button class="btn btn-primary btn-sm me-2" onclick="app.downloadTemplate()">
+                                <i class="fas fa-file-download me-1"></i> Download Template
+                            </button>
+                            <button class="btn btn-info btn-sm me-2" onclick="app.importCSV()">
                                 <i class="fas fa-upload me-1"></i> Import CSV
                             </button>
-                            <button class="btn btn-secondary btn-sm" onclick="exportCSV()">
+                            <button class="btn btn-secondary btn-sm" onclick="app.exportCSV()">
                                 <i class="fas fa-download me-1"></i> Export CSV
                             </button>
                         </div>

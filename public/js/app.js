@@ -486,15 +486,142 @@ class FinancialTracker {
         input.onchange = (e) => {
             const file = e.target.files[0];
             if (file) {
-                this.showAlert('info', 'CSV import functionality will parse and validate employee data from your file.');
+                this.processCSVFile(file);
             }
         };
         input.click();
     }
 
+    processCSVFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const csv = e.target.result;
+                const lines = csv.split('\n');
+                const headers = lines[0].split(',').map(h => h.trim());
+                
+                // Validate headers
+                const requiredHeaders = ['Employee_Name', 'Department', 'LCAT', 'Education_Level', 'Years_Experience', 'Priced_Salary', 'Current_Salary', 'Hours_Per_Month', 'Bill_Rate'];
+                const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+                
+                if (missingHeaders.length > 0) {
+                    this.showAlert('danger', `Missing required columns: ${missingHeaders.join(', ')}`);
+                    return;
+                }
+                
+                const newEmployees = [];
+                let importedCount = 0;
+                let skippedCount = 0;
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    const values = line.split(',').map(v => v.trim());
+                    if (values.length < requiredHeaders.length || !values[0]) {
+                        skippedCount++;
+                        continue;
+                    }
+                    
+                    const employee = {};
+                    headers.forEach((header, index) => {
+                        if (index < values.length) {
+                            const value = values[index];
+                            
+                            // Map CSV headers to employee object
+                            switch (header) {
+                                case 'Employee_Name':
+                                    employee.employee_name = value;
+                                    break;
+                                case 'Department':
+                                    employee.department = value;
+                                    break;
+                                case 'LCAT':
+                                    employee.lcat = value;
+                                    break;
+                                case 'Education_Level':
+                                    employee.education_level = value;
+                                    break;
+                                case 'Years_Experience':
+                                    employee.years_experience = parseInt(value) || 0;
+                                    break;
+                                case 'Priced_Salary':
+                                    employee.priced_salary = parseFloat(value) || 0;
+                                    break;
+                                case 'Current_Salary':
+                                    employee.current_salary = parseFloat(value) || 0;
+                                    break;
+                                case 'Hours_Per_Month':
+                                    employee.hours_per_month = parseFloat(value) || 160;
+                                    break;
+                                case 'Bill_Rate':
+                                    employee.bill_rate = parseFloat(value) || 0;
+                                    break;
+                                case 'Start_Date':
+                                    employee.start_date = value;
+                                    break;
+                                case 'End_Date':
+                                    employee.end_date = value || null;
+                                    break;
+                                case 'Notes':
+                                    employee.notes = value;
+                                    break;
+                                default:
+                                    // Handle monthly billing data
+                                    if (header.includes('_Hours') && value) {
+                                        if (!employee.monthly_data) employee.monthly_data = [];
+                                        const monthYear = header.replace('_Hours', '').replace('_', '-');
+                                        const monthData = employee.monthly_data.find(m => m.month === monthYear) || { month: monthYear };
+                                        monthData.actual_hours = parseFloat(value);
+                                        if (!employee.monthly_data.find(m => m.month === monthYear)) {
+                                            employee.monthly_data.push(monthData);
+                                        }
+                                    } else if (header.includes('_Revenue') && value) {
+                                        if (!employee.monthly_data) employee.monthly_data = [];
+                                        const monthYear = header.replace('_Revenue', '').replace('_', '-');
+                                        const monthData = employee.monthly_data.find(m => m.month === monthYear) || { month: monthYear };
+                                        monthData.actual_revenue = parseFloat(value);
+                                        if (!employee.monthly_data.find(m => m.month === monthYear)) {
+                                            employee.monthly_data.push(monthData);
+                                        }
+                                    }
+                                    break;
+                            }
+                        }
+                    });
+                    
+                    // Calculate hourly rate if not provided
+                    if (!employee.hourly_rate && employee.current_salary && employee.hours_per_month) {
+                        employee.hourly_rate = employee.current_salary / 12 / employee.hours_per_month;
+                    }
+                    
+                    // Add unique ID
+                    employee._id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+                    
+                    newEmployees.push(employee);
+                    importedCount++;
+                }
+                
+                // Add imported employees to the current list
+                this.employees = [...this.employees, ...newEmployees];
+                this.renderEmployeeTable();
+                this.updateSummaryCards();
+                this.updateAnalyticsCharts();
+                
+                this.showAlert('success', `CSV import completed! Imported: ${importedCount}, Skipped: ${skippedCount} employees.`);
+                
+            } catch (error) {
+                console.error('CSV parsing error:', error);
+                this.showAlert('danger', 'Failed to parse CSV file. Please check the format and try again.');
+            }
+        };
+        
+        reader.readAsText(file);
+    }
+
     exportCSV() {
         const csvContent = [
-            'Employee_Name,Department,LCAT,Education_Level,Years_Experience,Priced_Salary,Current_Salary,Hours_Per_Month,Start_Date,End_Date,Notes',
+            'Employee_Name,Department,LCAT,Education_Level,Years_Experience,Priced_Salary,Current_Salary,Hours_Per_Month,Bill_Rate,Start_Date,End_Date,Notes',
             ...this.employees.map(emp => [
                 emp.employee_name,
                 emp.department,
@@ -504,6 +631,7 @@ class FinancialTracker {
                 emp.priced_salary,
                 emp.current_salary,
                 emp.hours_per_month,
+                emp.bill_rate || 0,
                 emp.start_date,
                 emp.end_date || '',
                 emp.notes || ''
@@ -519,6 +647,64 @@ class FinancialTracker {
         window.URL.revokeObjectURL(url);
         
         this.showAlert('success', 'Employee data exported to CSV!');
+    }
+
+    downloadTemplate() {
+        // Generate comprehensive template with monthly billing columns
+        const currentYear = new Date().getFullYear();
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        
+        // Create header with monthly billing columns
+        const baseHeaders = [
+            'Employee_Name', 'Department', 'LCAT', 'Education_Level', 'Years_Experience',
+            'Priced_Salary', 'Current_Salary', 'Hours_Per_Month', 'Bill_Rate', 
+            'Start_Date', 'End_Date', 'Notes'
+        ];
+        
+        const monthlyHeaders = [];
+        months.forEach(month => {
+            monthlyHeaders.push(`${month}_${currentYear}_Hours`);
+            monthlyHeaders.push(`${month}_${currentYear}_Revenue`);
+        });
+        
+        const headers = [...baseHeaders, ...monthlyHeaders];
+        
+        // Create sample rows
+        const sampleRows = [
+            [
+                'John Smith', 'Engineering', 'Solution Architect/Engineering Lead (SA/Eng Lead)', 
+                "Master's Degree", '8', '140000', '145000', '160', '95', '2023-01-15', '',
+                'Team lead for core platform', 
+                '165', '15675', '158', '15010', '172', '16340', '160', '15200',
+                '168', '15960', '155', '14725', '162', '15390', '170', '16150',
+                '160', '15200', '165', '15675', '158', '15010', '160', '15200'
+            ],
+            [
+                'Sarah Johnson', 'Data Science', 'AI Engineering Lead (AI Lead)', 
+                'PhD', '6', '130000', '135000', '160', '85', '2023-03-01', '',
+                'ML model development specialist',
+                '162', '13770', '155', '13175', '168', '14280', '160', '13600',
+                '164', '13940', '158', '13430', '165', '14025', '172', '14620',
+                '160', '13600', '162', '13770', '155', '13175', '160', '13600'
+            ],
+            // Empty template row
+            ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
+        ];
+        
+        const csvContent = [
+            headers.join(','),
+            ...sampleRows.map(row => row.join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `employee_template_with_monthly_billing_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        
+        this.showAlert('success', 'Employee template with monthly billing downloaded!');
     }
 
     // Financial projections
