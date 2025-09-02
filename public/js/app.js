@@ -184,6 +184,7 @@ class FinancialTracker {
                 priced_salary: 140000,
                 current_salary: 145000,
                 hours_per_month: 160,
+                bill_rate: 95,
                 hourly_rate: 56.64,
                 start_date: '2023-01-15',
                 notes: 'Team lead for core platform'
@@ -198,6 +199,7 @@ class FinancialTracker {
                 priced_salary: 130000,
                 current_salary: 135000,
                 hours_per_month: 160,
+                bill_rate: 85,
                 hourly_rate: 52.73,
                 start_date: '2023-03-01',
                 notes: 'ML model development specialist'
@@ -212,6 +214,7 @@ class FinancialTracker {
                 priced_salary: 110000,
                 current_salary: 115000,
                 hours_per_month: 160,
+                bill_rate: 75,
                 hourly_rate: 44.92,
                 start_date: '2023-06-01',
                 notes: 'Full-stack development'
@@ -331,6 +334,7 @@ class FinancialTracker {
                     <td>$${(emp.priced_salary || 0).toLocaleString()}</td>
                     <td>$${(emp.current_salary || 0).toLocaleString()}</td>
                     <td>${emp.hours_per_month || 160}</td>
+                    <td>$${(emp.bill_rate || 0).toFixed(2)}</td>
                     <td>$${hourlyRate.toFixed(2)}</td>
                     <td class="${varianceClass}">$${variance.toLocaleString()}</td>
                     <td>
@@ -380,6 +384,7 @@ class FinancialTracker {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('employeeStartDate').value = today;
         document.getElementById('employeeHours').value = 160;
+        document.getElementById('employeeBillRate').value = '';
     }
 
     populateEmployeeForm(employee) {
@@ -391,6 +396,7 @@ class FinancialTracker {
         document.getElementById('employeePricedSalary').value = employee.priced_salary || 0;
         document.getElementById('employeeCurrentSalary').value = employee.current_salary || 0;
         document.getElementById('employeeHours').value = employee.hours_per_month || 160;
+        document.getElementById('employeeBillRate').value = employee.bill_rate || 0;
         document.getElementById('employeeStartDate').value = employee.start_date ? employee.start_date.split('T')[0] : '';
         document.getElementById('employeeEndDate').value = employee.end_date ? employee.end_date.split('T')[0] : '';
         document.getElementById('employeeNotes').value = employee.notes || '';
@@ -412,6 +418,7 @@ class FinancialTracker {
             priced_salary: parseFloat(document.getElementById('employeePricedSalary').value),
             current_salary: parseFloat(document.getElementById('employeeCurrentSalary').value),
             hours_per_month: parseFloat(document.getElementById('employeeHours').value),
+            bill_rate: parseFloat(document.getElementById('employeeBillRate').value),
             start_date: document.getElementById('employeeStartDate').value,
             end_date: document.getElementById('employeeEndDate').value || null,
             notes: document.getElementById('employeeNotes').value
@@ -765,7 +772,172 @@ function generateProjections() {
     app.generateProjections();
 }
 
+// Monthly Billing Management Functions
+let currentBillingPeriod = null;
+
+async function loadBillingPeriod() {
+    const year = document.getElementById('billingYear').value;
+    const month = document.getElementById('billingMonth').value;
+    
+    try {
+        // Get billing period information
+        const response = await fetch(`/api/billing-period/${year}/${month}`, {
+            headers: {
+                'Authorization': `Bearer ${app.authToken}`
+            }
+        });
+        
+        if (response.ok) {
+            const periodInfo = await response.json();
+            currentBillingPeriod = periodInfo;
+            
+            // Display period information
+            document.getElementById('periodDates').textContent = 
+                `${periodInfo.startDate} to ${periodInfo.endDate}`;
+            document.getElementById('workingDays').textContent = periodInfo.workingDays;
+            document.getElementById('maxHours').textContent = periodInfo.maxHours;
+            document.getElementById('holidays').textContent = 
+                periodInfo.holidays.join(', ') || 'None';
+                
+            document.getElementById('billingPeriodInfo').style.display = 'block';
+            
+            // Load billing summary
+            await loadBillingSummary(year, month);
+        } else {
+            app.showAlert('warning', 'Failed to load billing period information');
+        }
+    } catch (error) {
+        console.error('Error loading billing period:', error);
+        app.showAlert('danger', 'Error loading billing period: ' + error.message);
+    }
+}
+
+async function loadBillingSummary(year, month) {
+    try {
+        const response = await fetch(`/api/monthly-billing-summary/${year}/${month}`, {
+            headers: {
+                'Authorization': `Bearer ${app.authToken}`
+            }
+        });
+        
+        if (response.ok) {
+            const summary = await response.json();
+            
+            // Update summary cards
+            document.getElementById('projectedRevenue').textContent = 
+                '$' + summary.totalProjectedRevenue.toLocaleString();
+            document.getElementById('actualRevenue').textContent = 
+                '$' + summary.totalActualRevenue.toLocaleString();
+            document.getElementById('revenueVariance').textContent = 
+                '$' + summary.variance.toLocaleString();
+            document.getElementById('variancePercent').textContent = 
+                summary.variancePercent.toFixed(1) + '%';
+                
+            // Update variance card color based on value
+            const varianceCard = document.getElementById('revenueVariance').closest('.card');
+            if (summary.variance >= 0) {
+                varianceCard.className = 'card bg-success text-white';
+            } else {
+                varianceCard.className = 'card bg-danger text-white';
+            }
+            
+            document.getElementById('billingSummaryCards').style.display = 'flex';
+            
+            // Render employee billing table
+            renderBillingTable(summary.employeeDetails, year, month);
+        } else {
+            app.showAlert('warning', 'Failed to load billing summary');
+        }
+    } catch (error) {
+        console.error('Error loading billing summary:', error);
+        app.showAlert('danger', 'Error loading billing summary: ' + error.message);
+    }
+}
+
+function renderBillingTable(employeeDetails, year, month) {
+    const tbody = document.getElementById('billingTable');
+    
+    tbody.innerHTML = employeeDetails.map(emp => {
+        const variance = emp.actual_revenue - emp.projected_revenue;
+        const varianceClass = variance >= 0 ? 'text-success' : 'text-danger';
+        const maxHours = currentBillingPeriod ? currentBillingPeriod.maxHours : 176;
+        
+        return `
+            <tr>
+                <td><strong>${emp.employee_name}</strong></td>
+                <td>$${emp.bill_rate.toFixed(2)}</td>
+                <td>${emp.projected_hours}</td>
+                <td>
+                    <input type="number" class="form-control form-control-sm" 
+                           value="${emp.actual_hours}" 
+                           max="${maxHours}" 
+                           min="0" 
+                           id="hours-${emp.employee_id || emp.employee_name.replace(/\s+/g, '')}"
+                           style="width: 80px; display: inline-block;">
+                </td>
+                <td>$${emp.projected_revenue.toLocaleString()}</td>
+                <td>$${emp.actual_revenue.toLocaleString()}</td>
+                <td class="${varianceClass}">$${variance.toLocaleString()}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" 
+                            onclick="updateMonthlyBilling('${emp.employee_id || emp.employee_name.replace(/\s+/g, '')}', '${year}-${month.toString().padStart(2, '0')}')"
+                            title="Update billing for this employee">
+                        <i class="fas fa-save"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    document.getElementById('billingTableContainer').style.display = 'block';
+}
+
+async function updateMonthlyBilling(employeeId, month) {
+    const hoursInput = document.getElementById(`hours-${employeeId}`);
+    const actualHours = parseFloat(hoursInput.value);
+    
+    if (currentBillingPeriod && actualHours > currentBillingPeriod.maxHours) {
+        app.showAlert('warning', `Hours cannot exceed ${currentBillingPeriod.maxHours} (working days in this period)`);
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/employees/${employeeId}/monthly-billing`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${app.authToken}`
+            },
+            body: JSON.stringify({
+                month: month,
+                actual_hours: actualHours,
+                notes: ''
+            })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            app.showAlert('success', 'Monthly billing updated successfully!');
+            
+            // Refresh the billing summary
+            const [year, monthNum] = month.split('-');
+            await loadBillingSummary(year, parseInt(monthNum));
+        } else {
+            const error = await response.json();
+            app.showAlert('danger', 'Failed to update billing: ' + error.message);
+        }
+    } catch (error) {
+        console.error('Error updating monthly billing:', error);
+        app.showAlert('danger', 'Error updating billing: ' + error.message);
+    }
+}
+
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     app = new FinancialTracker();
+    
+    // Set current year and month as default
+    const now = new Date();
+    document.getElementById('billingYear').value = now.getFullYear();
+    document.getElementById('billingMonth').value = now.getMonth() + 1;
 });

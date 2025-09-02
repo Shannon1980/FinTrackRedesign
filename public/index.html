@@ -145,6 +145,11 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
+                <button class="nav-link" id="billing-tab" data-bs-toggle="tab" data-bs-target="#billing" type="button">
+                    <i class="fas fa-calendar-alt me-1"></i> Monthly Billing
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
                 <button class="nav-link" id="projections-tab" data-bs-toggle="tab" data-bs-target="#projections" type="button">
                     <i class="fas fa-chart-line me-1"></i> Financial Projections
                 </button>
@@ -217,6 +222,7 @@
                                         <th>Priced Salary</th>
                                         <th>Current Salary</th>
                                         <th>Hours/Month</th>
+                                        <th>Bill Rate</th>
                                         <th>Hourly Rate</th>
                                         <th>Variance</th>
                                         <th>Actions</th>
@@ -226,6 +232,130 @@
                                     <tr>
                                         <td colspan="10" class="text-center text-muted">No employees found. Add some employees to get started.</td>
                                     </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Billing Tab -->
+            <div class="tab-pane fade" id="billing" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calendar-alt me-2"></i> Monthly Billing Management
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Billing Period Selection -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <label class="form-label">Year</label>
+                                <select class="form-select" id="billingYear">
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Month</label>
+                                <select class="form-select" id="billingMonth">
+                                    <option value="1">January</option>
+                                    <option value="2">February</option>
+                                    <option value="3">March</option>
+                                    <option value="4">April</option>
+                                    <option value="5">May</option>
+                                    <option value="6">June</option>
+                                    <option value="7">July</option>
+                                    <option value="8">August</option>
+                                    <option value="9">September</option>
+                                    <option value="10">October</option>
+                                    <option value="11">November</option>
+                                    <option value="12">December</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button class="btn btn-primary" onclick="loadBillingPeriod()">
+                                    <i class="fas fa-calendar me-1"></i> Load Period
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Billing Period Info -->
+                        <div id="billingPeriodInfo" class="row mb-4" style="display: none;">
+                            <div class="col-md-12">
+                                <div class="alert alert-info">
+                                    <h6>Billing Period Information</h6>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <strong>Period:</strong> <span id="periodDates"></span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <strong>Working Days:</strong> <span id="workingDays"></span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <strong>Max Hours:</strong> <span id="maxHours"></span>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <strong>Holidays:</strong> <span id="holidays"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Billing Summary Cards -->
+                        <div class="row mb-4" id="billingSummaryCards" style="display: none;">
+                            <div class="col-md-3">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body text-center">
+                                        <h6>Projected Revenue</h6>
+                                        <h4 id="projectedRevenue">$0</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center">
+                                        <h6>Actual Revenue</h6>
+                                        <h4 id="actualRevenue">$0</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-warning text-white">
+                                    <div class="card-body text-center">
+                                        <h6>Revenue Variance</h6>
+                                        <h4 id="revenueVariance">$0</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body text-center">
+                                        <h6>Variance %</h6>
+                                        <h4 id="variancePercent">0%</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Employee Billing Table -->
+                        <div class="table-responsive" id="billingTableContainer" style="display: none;">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Employee</th>
+                                        <th>Bill Rate</th>
+                                        <th>Projected Hours</th>
+                                        <th>Actual Hours</th>
+                                        <th>Projected Revenue</th>
+                                        <th>Actual Revenue</th>
+                                        <th>Variance</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="billingTable">
                                 </tbody>
                             </table>
                         </div>
@@ -353,9 +483,13 @@
                                 <label class="form-label">Current Salary*</label>
                                 <input type="number" class="form-control" id="employeeCurrentSalary" min="0" required>
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label class="form-label">Hours per Month*</label>
                                 <input type="number" class="form-control" id="employeeHours" value="160" min="1" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Bill Rate ($/hr)*</label>
+                                <input type="number" class="form-control" id="employeeBillRate" min="0" step="0.01" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Start Date*</label>
