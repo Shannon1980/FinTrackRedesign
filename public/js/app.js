@@ -839,7 +839,7 @@ class FinancialTracker {
         const ctx = document.getElementById('projectionCanvas').getContext('2d');
         
         // Destroy existing chart if it exists
-        if (window.projectionChart) {
+        if (window.projectionChart && typeof window.projectionChart.destroy === 'function') {
             window.projectionChart.destroy();
         }
         
@@ -964,7 +964,7 @@ class FinancialTracker {
             lcatCounts[shortLCAT] = (lcatCounts[shortLCAT] || 0) + 1;
         });
 
-        if (window.lcatChart) {
+        if (window.lcatChart && typeof window.lcatChart.destroy === 'function') {
             window.lcatChart.destroy();
         }
 
