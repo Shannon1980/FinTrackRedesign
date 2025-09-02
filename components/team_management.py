@@ -1,6 +1,10 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import io
+import openpyxl
+from openpyxl import Workbook
+from openpyxl.styles import PatternFill, Font, Alignment
 
 def render_team_management():
     """Render the team management interface"""
@@ -9,15 +13,18 @@ def render_team_management():
     st.markdown("Manage your project team members and their information")
     
     # Team Management Tabs
-    tab1, tab2, tab3 = st.tabs(["➕ Add Employee", "📋 Current Team", "📊 Team Analytics"])
+    tab1, tab2, tab3, tab4 = st.tabs(["➕ Add Employee", "📥 Import Team", "📋 Current Team", "📊 Team Analytics"])
     
     with tab1:
         render_add_employee_form()
     
     with tab2:
-        render_current_team()
+        render_import_team()
     
     with tab3:
+        render_current_team()
+    
+    with tab4:
         render_team_analytics()
 
 def render_add_employee_form():
