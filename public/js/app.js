@@ -34,8 +34,8 @@ class FinancialTracker {
 
     // Authentication methods
     async login() {
-        const username = document.getElementById('loginUsername').value;
-        const password = document.getElementById('loginPassword').value;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
         const errorDiv = document.getElementById('loginError');
         
         try {
@@ -56,18 +56,21 @@ class FinancialTracker {
                 localStorage.setItem('auth_token', this.authToken);
                 localStorage.setItem('user_data', JSON.stringify(this.user));
                 
-                bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
                 this.showMainContent();
                 this.loadEmployees();
                 this.loadValidationOptions();
                 this.showAlert('success', 'Login successful!');
             } else {
-                errorDiv.textContent = data.message || 'Login failed';
-                errorDiv.style.display = 'block';
+                if (errorDiv) {
+                    errorDiv.textContent = data.message || 'Login failed';
+                    errorDiv.style.display = 'block';
+                }
             }
         } catch (error) {
-            errorDiv.textContent = 'Login failed: ' + error.message;
-            errorDiv.style.display = 'block';
+            if (errorDiv) {
+                errorDiv.textContent = 'Login failed: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
         } finally {
             this.showLoading(false);
         }
