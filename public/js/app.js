@@ -50,6 +50,15 @@ class FinancialTracker {
         const username = usernameEl?.value?.trim() || '';
         const password = passwordEl?.value?.trim() || '';
         
+        console.log('Form values:', { 
+            username: username, 
+            password: password,
+            usernameLength: username.length,
+            passwordLength: password.length,
+            usernameElValue: usernameEl.value,
+            passwordElValue: passwordEl.value
+        });
+        
         if (!username || !password) {
             if (errorDiv) {
                 errorDiv.textContent = 'Please enter both username and password';
