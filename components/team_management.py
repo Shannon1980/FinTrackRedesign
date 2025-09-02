@@ -5,6 +5,7 @@ import io
 import openpyxl
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Alignment
+import plotly.express as px
 
 def render_team_management():
     """Render the team management interface"""
@@ -339,29 +340,53 @@ def render_import_team():
             st.markdown("#### 👀 Data Preview")
             st.dataframe(df.head(10), use_container_width=True)
             
-            # Validation and mapping
-            required_columns = ['employee_name', 'labor_category']
-            missing_columns = [col for col in required_columns if col not in df.columns]
+            # Enhanced validation with specific location feedback
+            validation_results = validate_employee_data_detailed(df)
             
-            if missing_columns:
-                st.error(f"❌ Missing required columns: {', '.join(missing_columns)}")
+            if validation_results['missing_columns']:
+                st.error(f"❌ Missing required columns: {', '.join(validation_results['missing_columns'])}")
                 st.markdown("**Required columns:** employee_name, labor_category")
                 st.markdown("**Optional columns:** department, status, salary, start_date, location, manager, skills, notes")
             else:
-                # Show validation results
+                # Show detailed validation results
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
-                    valid_records = len(df.dropna(subset=required_columns))
-                    st.metric("✅ Valid Records", valid_records)
+                    st.metric("✅ Valid Records", validation_results['valid_count'])
                 
                 with col2:
-                    invalid_records = len(df) - valid_records
-                    st.metric("❌ Invalid Records", invalid_records)
+                    st.metric("❌ Invalid Records", validation_results['invalid_count'])
                 
                 with col3:
-                    new_records = len(df)
-                    st.metric("📥 New Records", new_records)
+                    st.metric("📥 Total Records", len(df))
+                
+                # Show specific error details
+                if validation_results['errors']:
+                    st.markdown("#### 🔍 Data Issues Found")
+                    st.markdown("The following specific issues were found in your data:")
+                    
+                    for error in validation_results['errors']:
+                        if error['type'] == 'missing_required':
+                            st.error(f"**Row {error['row']+2}** (Excel row {error['row']+2}): Missing required field '{error['column']}' - Cell {get_excel_column_letter(error['col_index'])}{error['row']+2}")
+                        elif error['type'] == 'invalid_salary':
+                            st.warning(f"**Row {error['row']+2}** (Excel row {error['row']+2}): Invalid salary value '{error['value']}' in cell {get_excel_column_letter(error['col_index'])}{error['row']+2}")
+                        elif error['type'] == 'invalid_date':
+                            st.warning(f"**Row {error['row']+2}** (Excel row {error['row']+2}): Invalid date format '{error['value']}' in cell {get_excel_column_letter(error['col_index'])}{error['row']+2}")
+                        elif error['type'] == 'duplicate_name':
+                            st.warning(f"**Row {error['row']+2}** (Excel row {error['row']+2}): Duplicate employee name '{error['value']}' in cell {get_excel_column_letter(error['col_index'])}{error['row']+2}")
+                    
+                    if len(validation_results['errors']) > 10:
+                        st.info(f"Showing first 10 errors. Total errors found: {len(validation_results['errors'])}")
+                
+                # Show column mapping
+                st.markdown("#### 📋 Column Mapping")
+                col_mapping_df = pd.DataFrame({
+                    'Excel Column': [get_excel_column_letter(i) for i in range(len(df.columns))],
+                    'Column Name': df.columns.tolist(),
+                    'Data Type': [str(df[col].dtype) for col in df.columns],
+                    'Sample Value': [str(df[col].iloc[0]) if len(df) > 0 else 'N/A' for col in df.columns]
+                })
+                st.dataframe(col_mapping_df, use_container_width=True)
                 
                 # Import options
                 st.markdown("#### ⚙️ Import Options")
@@ -597,6 +622,120 @@ def create_employee_template(format_type='excel'):
     
     else:  # CSV format
         return df.to_csv(index=False)
+
+def get_excel_column_letter(col_index):
+    """Convert column index to Excel column letter (A, B, C, etc.)"""
+    result = ""
+    while col_index >= 0:
+        result = chr(col_index % 26 + ord('A')) + result
+        col_index = col_index // 26 - 1
+    return result
+
+def validate_employee_data_detailed(df):
+    """Perform detailed validation of employee data with specific error locations"""
+    
+    errors = []
+    required_columns = ['employee_name', 'labor_category']
+    
+    # Check for missing required columns
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    
+    if missing_columns:
+        return {
+            'missing_columns': missing_columns,
+            'errors': [],
+            'valid_count': 0,
+            'invalid_count': len(df)
+        }
+    
+    valid_count = 0
+    
+    # Check each row for data issues
+    for row_idx, row in df.iterrows():
+        row_has_errors = False
+        
+        # Check required fields
+        for col in required_columns:
+            col_idx = df.columns.get_loc(col)
+            if pd.isna(row[col]) or str(row[col]).strip() == '':
+                errors.append({
+                    'type': 'missing_required',
+                    'row': row_idx,
+                    'col_index': col_idx,
+                    'column': col,
+                    'value': row[col]
+                })
+                row_has_errors = True
+        
+        # Check salary field if present
+        if 'salary' in df.columns and not pd.isna(row['salary']):
+            col_idx = df.columns.get_loc('salary')
+            try:
+                salary_val = float(row['salary'])
+                if salary_val < 0:
+                    errors.append({
+                        'type': 'invalid_salary',
+                        'row': row_idx,
+                        'col_index': col_idx,
+                        'column': 'salary',
+                        'value': row['salary']
+                    })
+                    row_has_errors = True
+            except (ValueError, TypeError):
+                errors.append({
+                    'type': 'invalid_salary',
+                    'row': row_idx,
+                    'col_index': col_idx,
+                    'column': 'salary',
+                    'value': row['salary']
+                })
+                row_has_errors = True
+        
+        # Check date field if present
+        if 'start_date' in df.columns and not pd.isna(row['start_date']):
+            col_idx = df.columns.get_loc('start_date')
+            try:
+                if isinstance(row['start_date'], str):
+                    pd.to_datetime(row['start_date'])
+            except (ValueError, TypeError):
+                errors.append({
+                    'type': 'invalid_date',
+                    'row': row_idx,
+                    'col_index': col_idx,
+                    'column': 'start_date',
+                    'value': row['start_date']
+                })
+                row_has_errors = True
+        
+        if not row_has_errors:
+            valid_count += 1
+    
+    # Check for duplicate employee names
+    if 'employee_name' in df.columns:
+        name_col_idx = df.columns.get_loc('employee_name')
+        name_counts = df['employee_name'].value_counts()
+        duplicates = name_counts[name_counts > 1].index.tolist()
+        
+        for duplicate_name in duplicates:
+            duplicate_rows = df[df['employee_name'] == duplicate_name].index.tolist()
+            for row_idx in duplicate_rows[1:]:  # Skip first occurrence
+                errors.append({
+                    'type': 'duplicate_name',
+                    'row': row_idx,
+                    'col_index': name_col_idx,
+                    'column': 'employee_name',
+                    'value': duplicate_name
+                })
+    
+    # Limit errors shown to first 10 for performance
+    limited_errors = errors[:10]
+    
+    return {
+        'missing_columns': missing_columns,
+        'errors': limited_errors,
+        'valid_count': valid_count,
+        'invalid_count': len(df) - valid_count
+    }
 
 def import_employees_from_dataframe(df, import_mode, validate_data):
     """Import employees from a pandas DataFrame"""
