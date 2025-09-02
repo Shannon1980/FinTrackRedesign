@@ -646,9 +646,9 @@ class FinancialTracker {
     }
 
     downloadTemplate() {
-        // Generate comprehensive template with monthly billing columns
+        // Generate comprehensive template with billing period columns
         const currentYear = new Date().getFullYear();
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const periods = ['JAN_FEB', 'FEB_MAR', 'MAR_APR', 'APR_MAY', 'MAY_JUN', 'JUN_JUL', 'JUL_AUG', 'AUG_SEP', 'SEP_OCT', 'OCT_NOV', 'NOV_DEC', 'DEC_JAN'];
         
         // Create header with monthly billing columns
         const baseHeaders = [
@@ -657,13 +657,13 @@ class FinancialTracker {
             'Start_Date', 'End_Date', 'Notes'
         ];
         
-        const monthlyHeaders = [];
-        months.forEach(month => {
-            monthlyHeaders.push(`${month}_${currentYear}_Hours`);
-            monthlyHeaders.push(`${month}_${currentYear}_Revenue`);
+        const periodHeaders = [];
+        periods.forEach(period => {
+            periodHeaders.push(`${period}_${currentYear}_Hours`);
+            periodHeaders.push(`${period}_${currentYear}_Revenue`);
         });
         
-        const headers = [...baseHeaders, ...monthlyHeaders];
+        const headers = [...baseHeaders, ...periodHeaders];
         
         // Create sample rows
         const sampleRows = [
@@ -1012,7 +1012,7 @@ let currentBillingPeriod = null;
 
 async function loadBillingPeriod() {
     const year = document.getElementById('billingYear').value;
-    const month = document.getElementById('billingMonth').value;
+    const period = document.getElementById('billingPeriod').value;
     
     try {
         // Get billing period information
@@ -1488,7 +1488,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set current year and month as default
     const now = new Date();
     document.getElementById('billingYear').value = now.getFullYear();
-    document.getElementById('billingMonth').value = now.getMonth() + 1;
+    document.getElementById('billingPeriod').value = 'JAN-FEB';
     
     // Set defaults for contract costs
     const currentMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
