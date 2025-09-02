@@ -35,6 +35,27 @@ class DataManager:
                     'Miscellaneous': 18000
                 }
             }
+        
+        # Initialize contract costs data
+        if 'odc_items' not in st.session_state:
+            st.session_state.odc_items = []
+        
+        if 'indirect_costs' not in st.session_state:
+            st.session_state.indirect_costs = []
+        
+        if 'indirect_rates' not in st.session_state:
+            st.session_state.indirect_rates = {
+                'fringe_rate': 25.0,
+                'overhead_rate': 45.0,
+                'ga_rate': 15.0
+            }
+        
+        if 'contract_settings' not in st.session_state:
+            st.session_state.contract_settings = {
+                'contract_value': 2000000.0,
+                'start_date': datetime.now(),
+                'end_date': datetime.now() + timedelta(days=365)
+            }
     
     def add_employee(self, employee_data):
         """Add a new employee to the system"""
@@ -102,3 +123,149 @@ class DataManager:
             # Return employees data as CSV for simplicity
             df = self.get_employees_df()
             return df.to_csv(index=False) if not df.empty else "No data to export"
+    
+    # Contract Costs Management Methods
+    
+    def add_odc_item(self, odc_data):
+        """Add a new ODC item"""
+        odc_data['id'] = len(st.session_state.odc_items) + 1
+        odc_data['date_added'] = datetime.now()
+        st.session_state.odc_items.append(odc_data)
+    
+    def get_odc_df(self):
+        """Return ODC items as DataFrame"""
+        if not st.session_state.odc_items:
+            return pd.DataFrame()
+        return pd.DataFrame(st.session_state.odc_items)
+    
+    def update_indirect_rates(self, rates):
+        """Update indirect cost rates"""
+        st.session_state.indirect_rates.update(rates)
+    
+    def update_indirect_costs_period(self, period_data):
+        """Update indirect costs for a specific period"""
+        # Remove existing data for this period
+        st.session_state.indirect_costs = [
+            item for item in st.session_state.indirect_costs 
+            if item.get('period') != period_data['period']
+        ]
+        
+        # Add new data
+        period_data['date_updated'] = datetime.now()
+        st.session_state.indirect_costs.append(period_data)
+    
+    def get_indirect_costs_df(self):
+        """Return indirect costs as DataFrame"""
+        if not st.session_state.indirect_costs:
+            return pd.DataFrame()
+        df = pd.DataFrame(st.session_state.indirect_costs)
+        return df.sort_values('period') if not df.empty else df
+    
+    def get_indirect_costs_for_period(self, period):
+        """Get indirect costs for a specific period"""
+        for item in st.session_state.indirect_costs:
+            if item.get('period') == period:
+                return item
+        return {}
+    
+    def update_contract_settings(self, contract_value, start_date):
+        """Update contract settings"""
+        st.session_state.contract_settings.update({
+            'contract_value': contract_value,
+            'start_date': start_date
+        })
+    
+    def get_contract_value(self):
+        """Get contract value"""
+        return st.session_state.contract_settings.get('contract_value', 0)
+    
+    def get_contract_start_date(self):
+        """Get contract start date"""
+        return st.session_state.contract_settings.get('start_date', datetime.now())
+    
+    def get_cost_summary(self):
+        """Calculate comprehensive cost summary"""
+        # Labor costs from employees
+        employees_df = self.get_employees_df()
+        total_labor = employees_df['salary'].sum() if not employees_df.empty else 0
+        
+        # ODC costs
+        odc_df = self.get_odc_df()
+        total_odc = odc_df['amount'].sum() if not odc_df.empty else 0
+        
+        # Indirect costs
+        indirect_df = self.get_indirect_costs_df()
+        total_indirect = indirect_df['total'].sum() if not indirect_df.empty else 0
+        
+        # Contract value
+        contract_value = self.get_contract_value()
+        
+        return {
+            'total_labor': total_labor,
+            'total_odc': total_odc,
+            'total_indirect': total_indirect,
+            'contract_value': contract_value,
+            'labor_variance': 0,  # Can be calculated based on budget vs actual
+            'odc_variance': 0,
+            'indirect_variance': 0
+        }
+    
+    def get_monthly_costs(self):
+        """Get monthly cost breakdown"""
+        # This is a simplified version - in practice you'd break down by actual months
+        data = []
+        for i in range(12):
+            month = f"2024-{i+1:02d}"
+            data.append({
+                'month': month,
+                'labor': 50000 + (i * 2000),
+                'odc': 8000 + (i * 500),
+                'indirect': 25000 + (i * 1000)
+            })
+        return pd.DataFrame(data)
+    
+    def get_monthly_burn_rate(self):
+        """Calculate monthly burn rate"""
+        cost_summary = self.get_cost_summary()
+        total_costs = cost_summary['total_labor'] + cost_summary['total_odc'] + cost_summary['total_indirect']
+        return total_costs / 12  # Simplified - divide by 12 months
+    
+    def get_pl_summary(self):
+        """Get profit and loss summary"""
+        cost_summary = self.get_cost_summary()
+        
+        return {
+            'contract_value': cost_summary['contract_value'],
+            'labor_costs': cost_summary['total_labor'],
+            'odc_costs': cost_summary['total_odc'],
+            'indirect_costs': cost_summary['total_indirect'],
+            'total_costs': cost_summary['total_labor'] + cost_summary['total_odc'] + cost_summary['total_indirect']
+        }
+    
+    def get_monthly_pl_data(self):
+        """Get monthly P&L data for trending"""
+        data = []
+        cumulative_pl = 0
+        contract_value = self.get_contract_value()
+        monthly_revenue = contract_value / 12  # Simplified
+        
+        for i in range(12):
+            month = f"2024-{i+1:02d}"
+            labor = 50000 + (i * 2000)
+            odc = 8000 + (i * 500)
+            indirect = 25000 + (i * 1000)
+            monthly_costs = labor + odc + indirect
+            monthly_pl = monthly_revenue - monthly_costs
+            cumulative_pl += monthly_pl
+            
+            data.append({
+                'period': month,
+                'labor': labor,
+                'odc': odc,
+                'indirect': indirect,
+                'revenue': monthly_revenue,
+                'monthly_pl': monthly_pl,
+                'cumulative_pl': cumulative_pl
+            })
+        
+        return pd.DataFrame(data)
