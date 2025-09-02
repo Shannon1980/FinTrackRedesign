@@ -40,9 +40,6 @@ class FinancialTracker {
         
         try {
             this.showLoading(true);
-            console.log('Attempting login with:', { username, password: '***' });
-            console.log('Login URL:', `${this.apiBase}/auth/login`);
-            
             const response = await fetch(`${this.apiBase}/auth/login`, {
                 method: 'POST',
                 headers: {
@@ -51,9 +48,7 @@ class FinancialTracker {
                 body: JSON.stringify({ username, password })
             });
 
-            console.log('Login response status:', response.status);
             const data = await response.json();
-            console.log('Login response data:', data);
 
             if (response.ok) {
                 this.authToken = data.token;

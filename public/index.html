@@ -65,40 +65,6 @@
         </div>
     </nav>
 
-    <!-- Login Modal -->
-    <div class="modal fade" id="loginModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Login to SEAS Financial Tracker</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="loginError" class="alert alert-danger alert-custom" style="display: none;"></div>
-                    <form id="loginForm">
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="loginUsername" value="admin" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="loginPassword" value="admin123" required>
-                        </div>
-                        <div class="text-muted small mb-3">
-                            <strong>Demo Credentials:</strong> Username: admin, Password: admin123
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="login()">
-                        <i class="fas fa-spinner fa-spin loading"></i>
-                        Login
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Main Content -->
     <div class="container-fluid mt-4" id="mainContent" style="display: none;">
