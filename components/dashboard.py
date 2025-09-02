@@ -212,12 +212,12 @@ def render_dashboard():
     
     with col1:
         if st.button("➕ Add New Employee", type="secondary", use_container_width=True):
-            st.switch_page("Team Management")
+            st.info("👥 Go to the **Team Management** tab to add new employees")
     
     with col2:
         if st.button("💰 Record Expense", type="secondary", use_container_width=True):
-            st.info("Use the sidebar 'Financial Parameters' section to quickly add expenses")
+            st.info("💰 Use the sidebar **Financial Parameters** section to quickly add expenses")
     
     with col3:
         if st.button("📊 View Detailed Reports", type="secondary", use_container_width=True):
-            st.switch_page("Analytics & Reports")
+            st.info("📈 Go to the **Analytics & Reports** tab for detailed insights")
