@@ -382,7 +382,6 @@ class FinancialTracker {
         document.getElementById('employeeForm').reset();
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('employeeStartDate').value = today;
-        document.getElementById('employeeHours').value = 160;
         document.getElementById('employeeBillRate').value = '';
     }
 
@@ -394,7 +393,6 @@ class FinancialTracker {
         document.getElementById('employeeExperience').value = employee.years_experience || 0;
         document.getElementById('employeePricedSalary').value = employee.priced_salary || 0;
         document.getElementById('employeeCurrentSalary').value = employee.current_salary || 0;
-        document.getElementById('employeeHours').value = employee.hours_per_month || 160;
         document.getElementById('employeeBillRate').value = employee.bill_rate || 0;
         document.getElementById('employeeStartDate').value = employee.start_date ? employee.start_date.split('T')[0] : '';
         document.getElementById('employeeEndDate').value = employee.end_date ? employee.end_date.split('T')[0] : '';
