@@ -531,7 +531,9 @@ def create_employee_template(format_type='excel'):
         # Create Excel file with formatting
         output = io.BytesIO()
         
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        # Create ExcelWriter with BytesIO buffer
+        writer = pd.ExcelWriter(output, engine='openpyxl')
+        try:
             df.to_excel(writer, sheet_name='Employee_Template', index=False)
             
             # Get workbook and worksheet
@@ -616,6 +618,9 @@ def create_employee_template(format_type='excel'):
                         pass
                 adjusted_width = min(max_length + 2, 40)
                 inst_sheet.column_dimensions[column_letter].width = adjusted_width
+        
+        finally:
+            writer.close()
         
         output.seek(0)
         return output.getvalue()
@@ -774,7 +779,8 @@ def import_employees_from_dataframe(df, import_mode, validate_data):
         
         # Convert data types
         if 'salary' in df.columns:
-            df['salary'] = pd.to_numeric(df['salary'], errors='coerce').fillna(75000)
+            df['salary'] = pd.to_numeric(df['salary'], errors='coerce')
+            df['salary'] = df['salary'].fillna(75000)
         
         # Handle import mode
         if import_mode == "Replace all existing":
