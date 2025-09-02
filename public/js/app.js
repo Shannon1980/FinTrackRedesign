@@ -83,33 +83,61 @@ class FinancialTracker {
     }
 
     showLogin() {
-        document.getElementById('welcomeScreen').style.display = 'none';
-        document.getElementById('mainContent').style.display = 'none';
-        document.getElementById('authContainer').style.display = 'block';
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const mainContent = document.getElementById('mainContent');
+        const authContainer = document.getElementById('authContainer');
+        
+        if (welcomeScreen) welcomeScreen.style.display = 'none';
+        if (mainContent) mainContent.style.display = 'none';
+        if (authContainer) authContainer.style.display = 'block';
     }
 
     showWelcome() {
-        document.getElementById('welcomeScreen').style.display = 'block';
-        document.getElementById('mainContent').style.display = 'none';
-        document.getElementById('authContainer').style.display = 'none';
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const mainContent = document.getElementById('mainContent');
+        const authContainer = document.getElementById('authContainer');
+        
+        if (welcomeScreen) welcomeScreen.style.display = 'block';
+        if (mainContent) mainContent.style.display = 'none';
+        if (authContainer) authContainer.style.display = 'none';
     }
 
     // UI methods
     showWelcomeScreen() {
-        document.getElementById('welcomeScreen').style.display = 'block';
-        document.getElementById('mainContent').style.display = 'none';
-        document.getElementById('userInfo').style.display = 'none';
-        document.getElementById('loginBtn').style.display = 'inline-block';
-        document.getElementById('logoutBtn').style.display = 'none';
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const mainContent = document.getElementById('mainContent');
+        const userInfo = document.getElementById('userInfo');
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const authContainer = document.getElementById('authContainer');
+        
+        if (welcomeScreen) welcomeScreen.style.display = 'block';
+        if (mainContent) mainContent.style.display = 'none';
+        if (authContainer) authContainer.style.display = 'none';
+        if (userInfo) userInfo.style.display = 'none';
+        if (loginBtn) loginBtn.style.display = 'inline-block';
+        if (logoutBtn) logoutBtn.style.display = 'none';
     }
 
     showMainContent() {
-        document.getElementById('welcomeScreen').style.display = 'none';
-        document.getElementById('mainContent').style.display = 'block';
-        document.getElementById('userInfo').style.display = 'inline-block';
-        document.getElementById('username').textContent = this.user.username;
-        document.getElementById('loginBtn').style.display = 'none';
-        document.getElementById('logoutBtn').style.display = 'inline-block';
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const mainContent = document.getElementById('mainContent');
+        const userInfo = document.getElementById('userInfo');
+        const usernameEl = document.getElementById('username');
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const authContainer = document.getElementById('authContainer');
+        
+        if (welcomeScreen) welcomeScreen.style.display = 'none';
+        if (mainContent) mainContent.style.display = 'block';
+        if (authContainer) authContainer.style.display = 'none';
+        if (userInfo) {
+            userInfo.style.display = 'inline-block';
+            userInfo.textContent = `Welcome, ${this.user.username}`;
+        }
+        if (usernameEl && this.user) usernameEl.textContent = this.user.username;
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (logoutBtn) logoutBtn.style.display = 'inline-block';
     }
 
     showLoading(show) {
@@ -888,7 +916,7 @@ class FinancialTracker {
             deptCounts[emp.department] = (deptCounts[emp.department] || 0) + 1;
         });
 
-        if (window.departmentChart) {
+        if (window.departmentChart && typeof window.departmentChart.destroy === 'function') {
             window.departmentChart.destroy();
         }
 
