@@ -34,7 +34,7 @@ class FinancialTracker {
 
     // Authentication methods
     async login() {
-        const usernameEl = document.getElementById('username');
+        const usernameEl = document.getElementById('loginUsername');
         const passwordEl = document.getElementById('password');
         const errorDiv = document.getElementById('loginError');
         
@@ -49,15 +49,6 @@ class FinancialTracker {
         
         const username = usernameEl?.value?.trim() || '';
         const password = passwordEl?.value?.trim() || '';
-        
-        console.log('Form values:', { 
-            username: username, 
-            password: password,
-            usernameLength: username.length,
-            passwordLength: password.length,
-            usernameElValue: usernameEl.value,
-            passwordElValue: passwordEl.value
-        });
         
         if (!username || !password) {
             if (errorDiv) {
