@@ -386,32 +386,33 @@
                                 <form id="indirectCostForm">
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">Year</label>
-                                            <select class="form-select" id="indirectCostYear">
-                                                <option value="2024">2024</option>
-                                                <option value="2025">2025</option>
-                                                <option value="2026">2026</option>
-                                            </select>
+                                            <label class="form-label">Month</label>
+                                            <input type="month" class="form-control" id="indirectCostMonth">
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">Effective Date</label>
-                                            <input type="date" class="form-control" id="effectiveDate">
+                                            <label class="form-label">Total Monthly Amount</label>
+                                            <input type="text" class="form-control" id="totalIndirectAmount" readonly 
+                                                   style="background-color: #f8f9fa; font-weight: bold;">
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">Fringe Rate (%)</label>
-                                            <input type="number" class="form-control" id="fringeRate" step="0.1" placeholder="25.5">
+                                            <label class="form-label">Fringe Amount ($)</label>
+                                            <input type="number" class="form-control" id="fringeAmount" step="0.01" 
+                                                   placeholder="7500.00" onchange="calculateTotalIndirect()">
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">Overhead Rate (%)</label>
-                                            <input type="number" class="form-control" id="overheadRate" step="0.1" placeholder="40.0">
+                                            <label class="form-label">Overhead Amount ($)</label>
+                                            <input type="number" class="form-control" id="overheadAmount" step="0.01" 
+                                                   placeholder="12000.00" onchange="calculateTotalIndirect()">
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">G&A Rate (%)</label>
-                                            <input type="number" class="form-control" id="gaRate" step="0.1" placeholder="8.5">
+                                            <label class="form-label">G&A Amount ($)</label>
+                                            <input type="number" class="form-control" id="gaAmount" step="0.01" 
+                                                   placeholder="2500.00" onchange="calculateTotalIndirect()">
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">Profit Rate (%)</label>
-                                            <input type="number" class="form-control" id="profitRate" step="0.1" placeholder="5.0">
+                                            <label class="form-label">Profit Amount ($)</label>
+                                            <input type="number" class="form-control" id="profitAmount" step="0.01" 
+                                                   placeholder="1500.00" onchange="calculateTotalIndirect()">
                                         </div>
                                         <div class="col-12 mb-3">
                                             <label class="form-label">Notes</label>
@@ -434,7 +435,7 @@
                                                     <i class="fas fa-upload me-1"></i> Import CSV
                                                 </button>
                                             </div>
-                                            <small class="text-muted">Upload CSV with: Year, Fringe_Rate, Overhead_Rate, GA_Rate, Profit_Rate, Effective_Date, Notes</small>
+                                            <small class="text-muted">Upload CSV with: Month, Fringe_Amount, Overhead_Amount, GA_Amount, Profit_Amount, Notes</small>
                                         </div>
                                     </div>
                                 </form>

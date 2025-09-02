@@ -62,16 +62,17 @@ const odcItemSchema = new mongoose.Schema({
     notes: { type: String, default: '' }
 }, { _id: false });
 
-// Indirect cost rates schema
-const indirectCostSchema = new mongoose.Schema({
-    year: { type: Number, required: true },
-    fringe_rate: { type: Number, required: true }, // Percentage (e.g., 25.5 for 25.5%)
-    overhead_rate: { type: Number, required: true }, // Percentage
-    ga_rate: { type: Number, required: true }, // G&A rate percentage
-    profit_rate: { type: Number, default: 0 }, // Profit rate percentage
-    effective_date: { type: Date, required: true },
+// Monthly indirect costs schema
+const monthlyIndirectCostSchema = new mongoose.Schema({
+    month: { type: String, required: true }, // Format: "YYYY-MM"
+    fringe_amount: { type: Number, required: true }, // Dollar amount
+    overhead_amount: { type: Number, required: true }, // Dollar amount
+    ga_amount: { type: Number, required: true }, // G&A dollar amount
+    profit_amount: { type: Number, default: 0 }, // Profit dollar amount
+    total_indirect_amount: { type: Number, required: true }, // Total of all indirect costs
     notes: { type: String, default: '' },
-    created_at: { type: Date, default: Date.now }
+    created_at: { type: Date, default: Date.now },
+    updated_at: { type: Date, default: Date.now }
 });
 
 // Project costs schema combining direct labor, ODCs, and indirect costs
@@ -119,7 +120,7 @@ employeeSchema.pre('save', function(next) {
 });
 
 const Employee = mongoose.model('Employee', employeeSchema);
-const IndirectCost = mongoose.model('IndirectCost', indirectCostSchema);
+const MonthlyIndirectCost = mongoose.model('MonthlyIndirectCost', monthlyIndirectCostSchema);
 const ProjectCost = mongoose.model('ProjectCost', projectCostSchema);
 
 // JWT Middleware for protected routes
@@ -727,28 +728,30 @@ app.get('/api/monthly-billing-summary/:year/:month', authMiddleware, async (req,
     }
 });
 
-// GET /api/indirect-costs/:year - Get indirect cost rates for a year
-app.get('/api/indirect-costs/:year', authMiddleware, async (req, res) => {
+// GET /api/indirect-costs/:year/:month - Get monthly indirect costs
+app.get('/api/indirect-costs/:year/:month', authMiddleware, async (req, res) => {
     try {
         const year = parseInt(req.params.year);
+        const month = parseInt(req.params.month);
+        const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
         
         // Demo data for when MongoDB is not connected
         if (mongoose.connection.readyState !== 1) {
-            const demoRates = {
-                year: year,
-                fringe_rate: 25.5,
-                overhead_rate: 40.0,
-                ga_rate: 8.5,
-                profit_rate: 5.0,
-                effective_date: `${year}-01-01`,
-                notes: 'Demo indirect cost rates'
+            const demoAmounts = {
+                month: monthKey,
+                fringe_amount: 7500,
+                overhead_amount: 12000,
+                ga_amount: 2500,
+                profit_amount: 1500,
+                total_indirect_amount: 23500,
+                notes: 'Demo monthly indirect costs'
             };
-            return res.json(demoRates);
+            return res.json(demoAmounts);
         }
         
-        const indirectCost = await IndirectCost.findOne({ year }).sort({ effective_date: -1 });
+        const indirectCost = await MonthlyIndirectCost.findOne({ month: monthKey });
         if (!indirectCost) {
-            return res.status(404).json({ message: 'Indirect cost rates not found for this year' });
+            return res.status(404).json({ message: 'Monthly indirect costs not found for this period' });
         }
         
         res.json(indirectCost);
@@ -758,37 +761,40 @@ app.get('/api/indirect-costs/:year', authMiddleware, async (req, res) => {
     }
 });
 
-// POST /api/indirect-costs - Create or update indirect cost rates
+// POST /api/indirect-costs - Create or update monthly indirect costs
 app.post('/api/indirect-costs', authMiddleware, async (req, res) => {
     try {
-        const { year, fringe_rate, overhead_rate, ga_rate, profit_rate, effective_date, notes } = req.body;
+        const { month, fringe_amount, overhead_amount, ga_amount, profit_amount, notes } = req.body;
+        
+        // Calculate total
+        const total_indirect_amount = (fringe_amount || 0) + (overhead_amount || 0) + (ga_amount || 0) + (profit_amount || 0);
         
         // Demo mode simulation
         if (mongoose.connection.readyState !== 1) {
             return res.json({
-                message: 'Indirect cost rates updated successfully (demo mode)',
-                data: { year, fringe_rate, overhead_rate, ga_rate, profit_rate }
+                message: 'Monthly indirect costs updated successfully (demo mode)',
+                data: { month, fringe_amount, overhead_amount, ga_amount, profit_amount, total_indirect_amount }
             });
         }
         
         const indirectCostData = {
-            year,
-            fringe_rate,
-            overhead_rate,
-            ga_rate,
-            profit_rate: profit_rate || 0,
-            effective_date: new Date(effective_date),
+            month,
+            fringe_amount: parseFloat(fringe_amount) || 0,
+            overhead_amount: parseFloat(overhead_amount) || 0,
+            ga_amount: parseFloat(ga_amount) || 0,
+            profit_amount: parseFloat(profit_amount) || 0,
+            total_indirect_amount,
             notes: notes || ''
         };
         
         // Update existing or create new
-        const indirectCost = await IndirectCost.findOneAndUpdate(
-            { year },
+        const indirectCost = await MonthlyIndirectCost.findOneAndUpdate(
+            { month },
             indirectCostData,
             { upsert: true, new: true, runValidators: true }
         );
         
-        res.json({ message: 'Indirect cost rates saved successfully', data: indirectCost });
+        res.json({ message: 'Monthly indirect costs saved successfully', data: indirectCost });
     } catch (error) {
         console.error('Error saving indirect costs:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
@@ -941,17 +947,12 @@ async function calculateProjectCosts(year, month) {
         directLaborCost += actualHours * hourlyCost;
     });
     
-    // Get indirect cost rates
-    const indirectRates = await IndirectCost.findOne({ year }).sort({ effective_date: -1 });
-    const fringeRate = indirectRates?.fringe_rate || 25.5;
-    const overheadRate = indirectRates?.overhead_rate || 40.0;
-    const gaRate = indirectRates?.ga_rate || 8.5;
-    const profitRate = indirectRates?.profit_rate || 5.0;
-    
-    const fringeCost = directLaborCost * (fringeRate / 100);
-    const overheadCost = directLaborCost * (overheadRate / 100);
-    const gaCost = directLaborCost * (gaRate / 100);
-    const profitCost = directLaborCost * (profitRate / 100);
+    // Get monthly indirect costs
+    const monthlyIndirect = await MonthlyIndirectCost.findOne({ month: monthKey });
+    const fringeCost = monthlyIndirect?.fringe_amount || 0;
+    const overheadCost = monthlyIndirect?.overhead_amount || 0;
+    const gaCost = monthlyIndirect?.ga_amount || 0;
+    const profitCost = monthlyIndirect?.profit_amount || 0;
     
     return {
         month: monthKey,
@@ -969,18 +970,21 @@ async function calculateProjectCosts(year, month) {
 
 // Utility function to recalculate project cost totals
 async function recalculateProjectCost(projectCost) {
-    const [year, month] = projectCost.month.split('-');
-    const indirectRates = await IndirectCost.findOne({ year: parseInt(year) }).sort({ effective_date: -1 });
+    // Get monthly indirect costs
+    const monthlyIndirect = await MonthlyIndirectCost.findOne({ month: projectCost.month });
     
-    const fringeRate = indirectRates?.fringe_rate || 25.5;
-    const overheadRate = indirectRates?.overhead_rate || 40.0;
-    const gaRate = indirectRates?.ga_rate || 8.5;
-    const profitRate = indirectRates?.profit_rate || 5.0;
-    
-    projectCost.fringe_cost = projectCost.direct_labor_cost * (fringeRate / 100);
-    projectCost.overhead_cost = projectCost.direct_labor_cost * (overheadRate / 100);
-    projectCost.ga_cost = projectCost.direct_labor_cost * (gaRate / 100);
-    projectCost.profit_cost = projectCost.direct_labor_cost * (profitRate / 100);
+    if (monthlyIndirect) {
+        projectCost.fringe_cost = monthlyIndirect.fringe_amount;
+        projectCost.overhead_cost = monthlyIndirect.overhead_amount;
+        projectCost.ga_cost = monthlyIndirect.ga_amount;
+        projectCost.profit_cost = monthlyIndirect.profit_amount;
+    } else {
+        // Default to zero if no indirect costs entered
+        projectCost.fringe_cost = 0;
+        projectCost.overhead_cost = 0;
+        projectCost.ga_cost = 0;
+        projectCost.profit_cost = 0;
+    }
     
     projectCost.total_cost = projectCost.direct_labor_cost + 
                             projectCost.total_odc_cost + 
@@ -1029,25 +1033,30 @@ app.post('/api/import/indirect-costs', authMiddleware, upload.single('file'), as
         // Process each record
         for (const [index, record] of records.data.entries()) {
             try {
-                if (!record.Year || !record.Fringe_Rate || !record.Overhead_Rate || !record.GA_Rate) {
+                if (!record.Month || !record.Fringe_Amount || !record.Overhead_Amount || !record.GA_Amount) {
                     importResults.failed++;
                     importResults.errors.push(`Row ${index + 2}: Missing required fields`);
                     continue;
                 }
 
+                const total_indirect_amount = (parseFloat(record.Fringe_Amount) || 0) + 
+                                              (parseFloat(record.Overhead_Amount) || 0) + 
+                                              (parseFloat(record.GA_Amount) || 0) + 
+                                              (parseFloat(record.Profit_Amount) || 0);
+
                 const indirectCostData = {
-                    year: parseInt(record.Year),
-                    fringe_rate: parseFloat(record.Fringe_Rate),
-                    overhead_rate: parseFloat(record.Overhead_Rate),
-                    ga_rate: parseFloat(record.GA_Rate),
-                    profit_rate: parseFloat(record.Profit_Rate) || 0,
-                    effective_date: new Date(record.Effective_Date || `${record.Year}-01-01`),
+                    month: record.Month,
+                    fringe_amount: parseFloat(record.Fringe_Amount) || 0,
+                    overhead_amount: parseFloat(record.Overhead_Amount) || 0,
+                    ga_amount: parseFloat(record.GA_Amount) || 0,
+                    profit_amount: parseFloat(record.Profit_Amount) || 0,
+                    total_indirect_amount,
                     notes: record.Notes || ''
                 };
 
                 // Update existing or create new
-                await IndirectCost.findOneAndUpdate(
-                    { year: indirectCostData.year },
+                await MonthlyIndirectCost.findOneAndUpdate(
+                    { month: indirectCostData.month },
                     indirectCostData,
                     { upsert: true, new: true, runValidators: true }
                 );

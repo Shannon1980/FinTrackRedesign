@@ -708,22 +708,25 @@ class FinancialTracker {
     }
 
     downloadIndirectCostTemplate() {
+        const currentYear = new Date().getFullYear();
+        const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0');
+        
         const csvContent = [
-            'Year,Fringe_Rate,Overhead_Rate,GA_Rate,Profit_Rate,Effective_Date,Notes',
-            '2025,25.5,40.0,8.5,5.0,2025-01-01,Standard rates for 2025',
-            '2024,25.0,38.5,8.0,4.5,2024-01-01,Previous year rates',
-            ',,,,,,',
+            'Month,Fringe_Amount,Overhead_Amount,GA_Amount,Profit_Amount,Notes',
+            `${currentYear}-${currentMonth},7500.00,12000.00,2500.00,1500.00,Monthly indirect costs for ${currentYear}-${currentMonth}`,
+            `${currentYear}-${(parseInt(currentMonth) + 1).toString().padStart(2, '0')},7800.00,12200.00,2600.00,1600.00,Monthly indirect costs for next month`,
+            ',,,,,',
         ].join('\n');
 
         const blob = new Blob([csvContent], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `indirect_costs_template_${new Date().toISOString().split('T')[0]}.csv`;
+        a.download = `monthly_indirect_costs_template_${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         window.URL.revokeObjectURL(url);
         
-        this.showAlert('success', 'Indirect costs template downloaded!');
+        this.showAlert('success', 'Monthly indirect costs template downloaded!');
     }
 
     downloadOdcTemplate() {
@@ -1221,25 +1224,31 @@ async function importDataHelper(endpoint, fileInputId, successMessage) {
 let currentProjectCosts = null;
 
 async function loadIndirectCosts() {
-    const year = document.getElementById('indirectCostYear').value;
+    const monthInput = document.getElementById('indirectCostMonth').value;
+    if (!monthInput) {
+        app.showAlert('warning', 'Please select a month first');
+        return;
+    }
+    
+    const [year, month] = monthInput.split('-');
     
     try {
-        const response = await fetch(`/api/indirect-costs/${year}`, {
+        const response = await fetch(`/api/indirect-costs/${year}/${month}`, {
             headers: { 'Authorization': `Bearer ${app.authToken}` }
         });
         
         if (response.ok) {
-            const rates = await response.json();
-            document.getElementById('fringeRate').value = rates.fringe_rate;
-            document.getElementById('overheadRate').value = rates.overhead_rate;
-            document.getElementById('gaRate').value = rates.ga_rate;
-            document.getElementById('profitRate').value = rates.profit_rate || 0;
-            document.getElementById('effectiveDate').value = rates.effective_date ? rates.effective_date.split('T')[0] : '';
-            document.getElementById('indirectCostNotes').value = rates.notes || '';
+            const amounts = await response.json();
+            document.getElementById('fringeAmount').value = amounts.fringe_amount;
+            document.getElementById('overheadAmount').value = amounts.overhead_amount;
+            document.getElementById('gaAmount').value = amounts.ga_amount;
+            document.getElementById('profitAmount').value = amounts.profit_amount || 0;
+            document.getElementById('indirectCostNotes').value = amounts.notes || '';
             
-            app.showAlert('success', 'Indirect cost rates loaded successfully');
+            calculateTotalIndirect();
+            app.showAlert('success', 'Monthly indirect costs loaded successfully');
         } else {
-            app.showAlert('warning', 'No indirect cost rates found for this year');
+            app.showAlert('warning', 'No indirect costs found for this month');
         }
     } catch (error) {
         console.error('Error loading indirect costs:', error);
@@ -1248,13 +1257,18 @@ async function loadIndirectCosts() {
 }
 
 async function saveIndirectCosts() {
+    const monthInput = document.getElementById('indirectCostMonth').value;
+    if (!monthInput) {
+        app.showAlert('warning', 'Please select a month first');
+        return;
+    }
+    
     const data = {
-        year: parseInt(document.getElementById('indirectCostYear').value),
-        fringe_rate: parseFloat(document.getElementById('fringeRate').value),
-        overhead_rate: parseFloat(document.getElementById('overheadRate').value),
-        ga_rate: parseFloat(document.getElementById('gaRate').value),
-        profit_rate: parseFloat(document.getElementById('profitRate').value) || 0,
-        effective_date: document.getElementById('effectiveDate').value,
+        month: monthInput,
+        fringe_amount: parseFloat(document.getElementById('fringeAmount').value) || 0,
+        overhead_amount: parseFloat(document.getElementById('overheadAmount').value) || 0,
+        ga_amount: parseFloat(document.getElementById('gaAmount').value) || 0,
+        profit_amount: parseFloat(document.getElementById('profitAmount').value) || 0,
         notes: document.getElementById('indirectCostNotes').value
     };
     
@@ -1269,14 +1283,15 @@ async function saveIndirectCosts() {
         });
         
         if (response.ok) {
-            app.showAlert('success', 'Indirect cost rates saved successfully');
+            app.showAlert('success', 'Monthly indirect costs saved successfully');
+            calculateTotalIndirect();
         } else {
             const error = await response.json();
-            app.showAlert('danger', 'Failed to save rates: ' + error.message);
+            app.showAlert('danger', 'Failed to save amounts: ' + error.message);
         }
     } catch (error) {
         console.error('Error saving indirect costs:', error);
-        app.showAlert('danger', 'Error saving rates: ' + error.message);
+        app.showAlert('danger', 'Error saving amounts: ' + error.message);
     }
 }
 
@@ -1435,12 +1450,29 @@ async function removeOdcItem(month, itemIndex) {
     }
 }
 
+// Calculate total indirect costs
+function calculateTotalIndirect() {
+    const fringe = parseFloat(document.getElementById('fringeAmount').value) || 0;
+    const overhead = parseFloat(document.getElementById('overheadAmount').value) || 0;
+    const ga = parseFloat(document.getElementById('gaAmount').value) || 0;
+    const profit = parseFloat(document.getElementById('profitAmount').value) || 0;
+    
+    const total = fringe + overhead + ga + profit;
+    document.getElementById('totalIndirectAmount').value = '$' + total.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
 // Global import functions for contract costs
 async function importIndirectCosts() {
     await importDataHelper('/api/import/indirect-costs', 'indirectCostFile', 'Indirect costs imported successfully');
     
-    // Reload current year's rates
-    await loadIndirectCosts();
+    // Reload current month's amounts if a month is selected
+    const monthInput = document.getElementById('indirectCostMonth').value;
+    if (monthInput) {
+        await loadIndirectCosts();
+    }
 }
 
 async function importOdcItems() {
@@ -1463,8 +1495,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('billingMonth').value = now.getMonth() + 1;
     
     // Set defaults for contract costs
-    document.getElementById('indirectCostYear').value = now.getFullYear();
+    const currentMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+    document.getElementById('indirectCostMonth').value = currentMonth;
     document.getElementById('costSummaryYear').value = now.getFullYear();
     document.getElementById('costSummaryMonth').value = now.getMonth() + 1;
-    document.getElementById('effectiveDate').value = `${now.getFullYear()}-01-01`;
 });

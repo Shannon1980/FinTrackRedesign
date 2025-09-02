@@ -1,4 +1,5 @@
-Year,Fringe_Rate,Overhead_Rate,GA_Rate,Profit_Rate,Effective_Date,Notes
-2025,25.5,40.0,8.5,5.0,2025-01-01,Standard rates for 2025
-2024,25.0,38.5,8.0,4.5,2024-01-01,Previous year rates
-,,,,,,
+Month,Fringe_Amount,Overhead_Amount,GA_Amount,Profit_Amount,Notes
+2025-01,7500.00,12000.00,2500.00,1500.00,Monthly indirect costs for January 2025
+2025-02,7800.00,12200.00,2600.00,1600.00,Monthly indirect costs for February 2025
+2025-03,7500.00,12000.00,2500.00,1500.00,Monthly indirect costs for March 2025
+,,,,,
