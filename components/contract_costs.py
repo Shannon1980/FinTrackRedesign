@@ -351,47 +351,50 @@ def render_indirect_costs():
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            total_fringe = indirect_df['fringe'].sum()
+            total_fringe = indirect_df['fringe'].sum() if 'fringe' in indirect_df.columns else 0
             st.metric("Total Fringe", f"${total_fringe:,.0f}")
         
         with col2:
-            total_overhead = indirect_df['overhead'].sum()
+            total_overhead = indirect_df['overhead'].sum() if 'overhead' in indirect_df.columns else 0
             st.metric("Total Overhead", f"${total_overhead:,.0f}")
         
         with col3:
-            total_ga = indirect_df['ga'].sum()
+            total_ga = indirect_df['ga'].sum() if 'ga' in indirect_df.columns else 0
             st.metric("Total G&A", f"${total_ga:,.0f}")
         
         with col4:
-            total_indirect = indirect_df['total'].sum()
+            total_indirect = indirect_df['total'].sum() if 'total' in indirect_df.columns else 0
             st.metric("Total Indirect", f"${total_indirect:,.0f}")
         
         # Indirect costs trend chart
         fig = go.Figure()
         
-        fig.add_trace(go.Scatter(
-            x=indirect_df['period'],
-            y=indirect_df['fringe'],
-            mode='lines+markers',
-            name='Fringe',
-            line=dict(color='#2E86AB')
-        ))
+        if 'fringe' in indirect_df.columns:
+            fig.add_trace(go.Scatter(
+                x=indirect_df['period'],
+                y=indirect_df['fringe'],
+                mode='lines+markers',
+                name='Fringe',
+                line=dict(color='#2E86AB')
+            ))
         
-        fig.add_trace(go.Scatter(
-            x=indirect_df['period'],
-            y=indirect_df['overhead'],
-            mode='lines+markers',
-            name='Overhead',
-            line=dict(color='#A23B72')
-        ))
+        if 'overhead' in indirect_df.columns:
+            fig.add_trace(go.Scatter(
+                x=indirect_df['period'],
+                y=indirect_df['overhead'],
+                mode='lines+markers',
+                name='Overhead',
+                line=dict(color='#A23B72')
+            ))
         
-        fig.add_trace(go.Scatter(
-            x=indirect_df['period'],
-            y=indirect_df['ga'],
-            mode='lines+markers',
-            name='G&A',
-            line=dict(color='#F18F01')
-        ))
+        if 'ga' in indirect_df.columns:
+            fig.add_trace(go.Scatter(
+                x=indirect_df['period'],
+                y=indirect_df['ga'],
+                mode='lines+markers',
+                name='G&A',
+                line=dict(color='#F18F01')
+            ))
         
         fig.update_layout(
             title="Indirect Costs by Period",
