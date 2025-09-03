@@ -157,6 +157,17 @@
                         </div>
                     </div>
                     <div class="card-body">
+                        <!-- Template Instructions -->
+                        <div class="alert alert-info mb-3">
+                            <h6><i class="fas fa-info-circle me-1"></i> Employee Template Instructions</h6>
+                            <strong>Required Field:</strong> Employee_Name<br>
+                            <strong>Optional Fields:</strong> Department, Role, Status, LCAT, Education_Level, Priced_Salary, Current_Salary, Bill_Rate, Start_Date, End_Date, Notes<br>
+                            <strong>Department Options:</strong> Engineering, Data Science, Product Management, Operations, SEAS IT<br>
+                            <strong>Role Options:</strong> Employee, Manager<br>
+                            <strong>Status Options:</strong> Active, Inactive<br>
+                            <strong>Education Options:</strong> High School, Bachelor's Degree, Master's Degree, PhD
+                        </div>
+                        
                         <!-- Filters -->
                         <div class="row mb-3">
                             <div class="col-md-3">
@@ -394,13 +405,17 @@
                                         <div class="col-12">
                                             <hr>
                                             <label class="form-label"><strong>Import Indirect Costs</strong></label>
+                                            <div class="alert alert-light py-2 mb-2 small">
+                                                <strong>Template Format:</strong> Month columns (e.g., 2024_03, 2025_04)<br>
+                                                <strong>Required Rows:</strong> Fringe_Amount, Overhead_Amount, GA_Amount<br>
+                                                <strong>Optional:</strong> Profit_Amount, Notes
+                                            </div>
                                             <div class="input-group">
                                                 <input type="file" class="form-control" id="indirectCostFile" accept=".csv">
                                                 <button class="btn btn-outline-success" onclick="importIndirectCosts()">
                                                     <i class="fas fa-upload me-1"></i> Import CSV
                                                 </button>
                                             </div>
-                                            <small class="text-muted">Upload CSV with: Month, Fringe_Amount, Overhead_Amount, GA_Amount, Profit_Amount, Notes</small>
                                         </div>
                                     </div>
                                 </form>
@@ -501,13 +516,18 @@
                                 <div class="row mb-3">
                                     <div class="col-md-6">
                                         <label class="form-label"><strong>Import ODC Items</strong></label>
+                                        <div class="alert alert-light py-2 mb-2 small">
+                                            <strong>Required Fields:</strong> Month, Category, Description, Amount<br>
+                                            <strong>Optional:</strong> Notes<br>
+                                            <strong>Month Format:</strong> YYYY-MM (e.g., 2025-01)<br>
+                                            <strong>Category Options:</strong> Travel, Equipment, Software, Consulting, Other
+                                        </div>
                                         <div class="input-group">
                                             <input type="file" class="form-control" id="odcFile" accept=".csv">
                                             <button class="btn btn-outline-success" onclick="importOdcItems()">
                                                 <i class="fas fa-upload me-1"></i> Import CSV
                                             </button>
                                         </div>
-                                        <small class="text-muted">Upload CSV with: Month, Category, Description, Amount, Notes</small>
                                     </div>
                                 </div>
                                 <hr>
