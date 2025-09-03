@@ -843,22 +843,40 @@ app.get('/api/contract-costs/:period', authMiddleware, async (req, res) => {
 });
 
 function generateDemoContractCosts(period, year, month) {
+    const currentDate = new Date();
     const baseData = {
         directLaborCost: 285000,
         subcontractorLaborCost: 165000,
         totalIndirectCosts: 135000,
         totalOdcCosts: 45000,
-        totalContractCosts: 630000
+        totalContractCosts: 630000,
+        totalRevenue: 720000,
+        profit: 90000,
+        profitMargin: 12.5
     };
     
     if (period === 'monthly') {
+        const monthlyRevenue = Math.round(baseData.totalRevenue / 12);
+        const monthlyCosts = Math.round(baseData.totalContractCosts / 12);
+        const monthlyProfit = monthlyRevenue - monthlyCosts;
+        const monthlyProfitMargin = (monthlyProfit / monthlyRevenue) * 100;
+        
+        // Determine if this month is actual or projected
+        const monthDate = new Date(year, month - 1, 1);
+        const isActual = monthDate <= currentDate;
+        
         return {
             period: `${year}-${month.toString().padStart(2, '0')}`,
+            isActual: isActual,
+            dataType: isActual ? 'Actual' : 'Projected',
             directLaborCost: Math.round(baseData.directLaborCost / 12),
             subcontractorLaborCost: Math.round(baseData.subcontractorLaborCost / 12),
             totalIndirectCosts: Math.round(baseData.totalIndirectCosts / 12),
             totalOdcCosts: Math.round(baseData.totalOdcCosts / 12),
-            totalContractCosts: Math.round(baseData.totalContractCosts / 12),
+            totalContractCosts: monthlyCosts,
+            totalRevenue: monthlyRevenue,
+            profit: monthlyProfit,
+            profitMargin: monthlyProfitMargin.toFixed(2),
             breakdown: {
                 directLabor: [
                     { employee: 'John Smith', type: 'Employee', hours: 160, rate: 95, cost: 15200 },
@@ -870,6 +888,10 @@ function generateDemoContractCosts(period, year, month) {
             }
         };
     } else if (period === 'base-year') {
+        const actualMonths = calculateActualMonths('2024-03-12', '2025-03-12', currentDate);
+        const totalMonths = 12;
+        const projectedMonths = totalMonths - actualMonths;
+        
         return {
             period: '2024-03-12 to 2025-03-12',
             periodName: 'Base Year',
@@ -878,9 +900,23 @@ function generateDemoContractCosts(period, year, month) {
             totalIndirectCosts: baseData.totalIndirectCosts,
             totalOdcCosts: baseData.totalOdcCosts,
             totalContractCosts: baseData.totalContractCosts,
-            monthlyBreakdown: generateMonthlyBreakdown('2024-03', '2025-03')
+            totalRevenue: baseData.totalRevenue,
+            profit: baseData.profit,
+            profitMargin: baseData.profitMargin.toFixed(2),
+            actualMonths: actualMonths,
+            projectedMonths: projectedMonths,
+            dataComposition: `${actualMonths} actual, ${projectedMonths} projected months`,
+            monthlyBreakdown: generateMonthlyBreakdown('2024-03', '2025-03', currentDate)
         };
     } else if (period === 'option-year-1') {
+        const actualMonths = calculateActualMonths('2025-03-13', '2026-03-12', currentDate);
+        const totalMonths = 12;
+        const projectedMonths = totalMonths - actualMonths;
+        const yearTotalCosts = Math.round(baseData.totalContractCosts * 1.03);
+        const yearTotalRevenue = Math.round(baseData.totalRevenue * 1.03);
+        const yearProfit = yearTotalRevenue - yearTotalCosts;
+        const yearProfitMargin = (yearProfit / yearTotalRevenue) * 100;
+        
         return {
             period: '2025-03-13 to 2026-03-12',
             periodName: 'Option Year 1',
@@ -888,13 +924,31 @@ function generateDemoContractCosts(period, year, month) {
             subcontractorLaborCost: Math.round(baseData.subcontractorLaborCost * 1.03),
             totalIndirectCosts: Math.round(baseData.totalIndirectCosts * 1.03),
             totalOdcCosts: Math.round(baseData.totalOdcCosts * 1.03),
-            totalContractCosts: Math.round(baseData.totalContractCosts * 1.03),
-            monthlyBreakdown: generateMonthlyBreakdown('2025-03', '2026-03')
+            totalContractCosts: yearTotalCosts,
+            totalRevenue: yearTotalRevenue,
+            profit: yearProfit,
+            profitMargin: yearProfitMargin.toFixed(2),
+            actualMonths: actualMonths,
+            projectedMonths: projectedMonths,
+            dataComposition: actualMonths > 0 ? `${actualMonths} actual, ${projectedMonths} projected months` : 'All projected months',
+            monthlyBreakdown: generateMonthlyBreakdown('2025-03', '2026-03', currentDate)
         };
     }
 }
 
-function generateMonthlyBreakdown(startMonth, endMonth) {
+function calculateActualMonths(startDate, endDate, currentDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const current = new Date(currentDate);
+    
+    if (current < start) return 0;
+    if (current >= end) return 12;
+    
+    const monthsDiff = (current.getFullYear() - start.getFullYear()) * 12 + (current.getMonth() - start.getMonth());
+    return Math.max(0, Math.min(12, monthsDiff + 1));
+}
+
+function generateMonthlyBreakdown(startMonth, endMonth, currentDate) {
     const breakdown = [];
     const [startYear, startMon] = startMonth.split('-').map(Number);
     const [endYear, endMon] = endMonth.split('-').map(Number);
@@ -904,12 +958,30 @@ function generateMonthlyBreakdown(startMonth, endMonth) {
     
     for (let i = 0; i < 12; i++) {
         const monthKey = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
+        const monthDate = new Date(currentYear, currentMonth - 1, 1);
+        const isActual = monthDate <= currentDate;
+        
+        const directLabor = 23750 + Math.floor(Math.random() * 5000);
+        const subcontractorLabor = 13750 + Math.floor(Math.random() * 3000);
+        const indirect = 11250 + Math.floor(Math.random() * 2000);
+        const odc = 3750 + Math.floor(Math.random() * 1500);
+        const totalCosts = directLabor + subcontractorLabor + indirect + odc;
+        const revenue = Math.round(totalCosts * 1.14); // ~12.5% margin
+        const profit = revenue - totalCosts;
+        const profitMargin = (profit / revenue) * 100;
+        
         breakdown.push({
             month: monthKey,
-            directLaborCost: 23750 + Math.floor(Math.random() * 5000),
-            subcontractorLaborCost: 13750 + Math.floor(Math.random() * 3000),
-            indirectCosts: 11250 + Math.floor(Math.random() * 2000),
-            odcCosts: 3750 + Math.floor(Math.random() * 1500)
+            isActual: isActual,
+            dataType: isActual ? 'Actual' : 'Projected',
+            directLaborCost: directLabor,
+            subcontractorLaborCost: subcontractorLabor,
+            indirectCosts: indirect,
+            odcCosts: odc,
+            totalCosts: totalCosts,
+            revenue: revenue,
+            profit: profit,
+            profitMargin: profitMargin.toFixed(2)
         });
         
         currentMonth++;

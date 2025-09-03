@@ -766,9 +766,15 @@
                             </div>
                         </div>
 
+                        <!-- Data Type Indicator -->
+                        <div class="alert alert-info" id="dataTypeIndicator" style="display: none;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <span id="dataTypeText">Loading...</span>
+                        </div>
+
                         <!-- Cost Summary Cards -->
                         <div class="row mb-4" id="costSummaryCards" style="display: none;">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <div class="card bg-primary text-white">
                                     <div class="card-body text-center">
                                         <h4 id="directLaborTotal">$0</h4>
@@ -777,30 +783,48 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <div class="card bg-info text-white">
                                     <div class="card-body text-center">
                                         <h4 id="subcontractorLaborTotal">$0</h4>
-                                        <p class="mb-0">Subcontractor Labor</p>
-                                        <small id="subcontractorLaborSubtext">External contractor costs</small>
+                                        <p class="mb-0">Subcontractor</p>
+                                        <small id="subcontractorLaborSubtext">External costs</small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <div class="card bg-warning text-white">
                                     <div class="card-body text-center">
                                         <h4 id="totalIndirectTotal">$0</h4>
-                                        <p class="mb-0">Total Indirect</p>
-                                        <small id="indirectSubtext">Fringe + Overhead + G&A</small>
+                                        <p class="mb-0">Indirect</p>
+                                        <small id="indirectSubtext">Fringe + OH + G&A</small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
+                                <div class="card bg-secondary text-white">
+                                    <div class="card-body text-center">
+                                        <h4 id="totalRevenueTotal">$0</h4>
+                                        <p class="mb-0">Revenue</p>
+                                        <small id="revenueSubtext">Total billing</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
                                 <div class="card bg-success text-white">
                                     <div class="card-body text-center">
                                         <h4 id="totalContractTotal">$0</h4>
-                                        <p class="mb-0">Total Contract</p>
+                                        <p class="mb-0">Total Costs</p>
                                         <small id="contractSubtext">All costs + ODC</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card text-white" id="profitMarginCard">
+                                    <div class="card-body text-center">
+                                        <h4 id="profitMarginTotal">0%</h4>
+                                        <p class="mb-0">Profit Margin</p>
+                                        <small id="profitSubtext">$0 profit</small>
                                     </div>
                                 </div>
                             </div>
@@ -819,11 +843,15 @@
                                             <thead class="table-dark">
                                                 <tr>
                                                     <th>Month</th>
+                                                    <th>Status</th>
                                                     <th>Direct Labor</th>
                                                     <th>Subcontractor</th>
-                                                    <th>Indirect Costs</th>
+                                                    <th>Indirect</th>
                                                     <th>ODC</th>
-                                                    <th>Monthly Total</th>
+                                                    <th>Total Costs</th>
+                                                    <th>Revenue</th>
+                                                    <th>Profit</th>
+                                                    <th>Margin %</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="monthlyBreakdownTable">

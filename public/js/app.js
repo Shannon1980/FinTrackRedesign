@@ -1695,23 +1695,65 @@ async function loadContractCosts() {
 }
 
 function displayContractCosts(data, period) {
+    // Show data type indicator
+    const dataTypeIndicator = document.getElementById('dataTypeIndicator');
+    const dataTypeText = document.getElementById('dataTypeText');
+    
+    if (period === 'monthly') {
+        dataTypeText.textContent = `Showing ${data.dataType} data for ${data.period}`;
+        dataTypeIndicator.className = data.isActual ? 'alert alert-success' : 'alert alert-warning';
+    } else {
+        if (data.dataComposition) {
+            dataTypeText.textContent = `${data.periodName}: ${data.dataComposition}`;
+            dataTypeIndicator.className = data.actualMonths > 0 ? 'alert alert-info' : 'alert alert-warning';
+        } else {
+            dataTypeText.textContent = `${data.periodName}: All data`;
+            dataTypeIndicator.className = 'alert alert-info';
+        }
+    }
+    dataTypeIndicator.style.display = 'block';
+    
     // Update summary cards
     document.getElementById('directLaborTotal').textContent = `$${data.directLaborCost.toLocaleString()}`;
     document.getElementById('subcontractorLaborTotal').textContent = `$${data.subcontractorLaborCost.toLocaleString()}`;
     document.getElementById('totalIndirectTotal').textContent = `$${data.totalIndirectCosts.toLocaleString()}`;
     document.getElementById('totalContractTotal').textContent = `$${data.totalContractCosts.toLocaleString()}`;
     
+    // Update revenue and profit
+    if (data.totalRevenue) {
+        document.getElementById('totalRevenueTotal').textContent = `$${data.totalRevenue.toLocaleString()}`;
+    }
+    if (data.profit !== undefined && data.profitMargin !== undefined) {
+        document.getElementById('profitMarginTotal').textContent = `${data.profitMargin}%`;
+        document.getElementById('profitSubtext').textContent = `$${data.profit.toLocaleString()} profit`;
+        
+        // Color code profit margin card
+        const profitMarginCard = document.getElementById('profitMarginCard');
+        const margin = parseFloat(data.profitMargin);
+        if (margin >= 15) {
+            profitMarginCard.className = 'card text-white bg-success';
+        } else if (margin >= 10) {
+            profitMarginCard.className = 'card text-white bg-warning';
+        } else if (margin >= 0) {
+            profitMarginCard.className = 'card text-white bg-info';
+        } else {
+            profitMarginCard.className = 'card text-white bg-danger';
+        }
+    }
+    
     // Update subtexts
     if (period === 'monthly') {
         document.getElementById('directLaborSubtext').textContent = `Month: ${data.period}`;
-        document.getElementById('subcontractorLaborSubtext').textContent = `External contractors`;
-        document.getElementById('indirectSubtext').textContent = `Fringe + Overhead + G&A`;
+        document.getElementById('subcontractorLaborSubtext').textContent = data.dataType;
+        document.getElementById('indirectSubtext').textContent = `Fringe + OH + G&A`;
         document.getElementById('contractSubtext').textContent = `Total + ODC: $${data.totalOdcCosts.toLocaleString()}`;
+        document.getElementById('revenueSubtext').textContent = data.dataType;
     } else {
         document.getElementById('directLaborSubtext').textContent = data.periodName || period;
         document.getElementById('subcontractorLaborSubtext').textContent = `12-month period`;
         document.getElementById('indirectSubtext').textContent = `Annual indirect costs`;
         document.getElementById('contractSubtext').textContent = `Total + ODC: $${data.totalOdcCosts.toLocaleString()}`;
+        document.getElementById('revenueSubtext').textContent = `${data.actualMonths || 0} actual months`;
     }
     
     // Show summary cards
@@ -1739,15 +1781,26 @@ function displayMonthlyBreakdown(monthlyData) {
     const tbody = document.getElementById('monthlyBreakdownTable');
     
     tbody.innerHTML = monthlyData.map(month => {
-        const monthTotal = month.directLaborCost + month.subcontractorLaborCost + month.indirectCosts + month.odcCosts;
+        const statusBadge = month.isActual ? 
+            '<span class="badge bg-success">Actual</span>' : 
+            '<span class="badge bg-warning">Projected</span>';
+        
+        const profitClass = month.profit >= 0 ? 'text-success' : 'text-danger';
+        const marginClass = parseFloat(month.profitMargin) >= 10 ? 'text-success' : 
+                           parseFloat(month.profitMargin) >= 5 ? 'text-warning' : 'text-danger';
+        
         return `
-            <tr>
+            <tr class="${month.isActual ? '' : 'table-secondary'}">
                 <td>${month.month}</td>
+                <td>${statusBadge}</td>
                 <td>$${month.directLaborCost.toLocaleString()}</td>
                 <td>$${month.subcontractorLaborCost.toLocaleString()}</td>
                 <td>$${month.indirectCosts.toLocaleString()}</td>
                 <td>$${month.odcCosts.toLocaleString()}</td>
-                <td><strong>$${monthTotal.toLocaleString()}</strong></td>
+                <td><strong>$${month.totalCosts.toLocaleString()}</strong></td>
+                <td>$${month.revenue.toLocaleString()}</td>
+                <td class="${profitClass}">$${month.profit.toLocaleString()}</td>
+                <td class="${marginClass}"><strong>${month.profitMargin}%</strong></td>
             </tr>
         `;
     }).join('');
