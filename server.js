@@ -279,6 +279,148 @@ const multer = require('multer');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
+// POST /api/import/consolidated - Import employees with monthly data and indirect costs
+app.post('/api/import/consolidated', authMiddleware, upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+        
+        const csvData = req.file.buffer.toString('utf8');
+        const parsed = papa.parse(csvData, { header: true, skipEmptyLines: true });
+        
+        if (parsed.errors.length > 0) {
+            return res.status(400).json({ message: 'CSV parse error', errors: parsed.errors });
+        }
+        
+        const results = {
+            employees_imported: 0,
+            monthly_data_imported: 0,
+            indirect_costs_imported: 0,
+            errors: []
+        };
+        
+        const processedIndirectCosts = new Set(); // Track processed indirect cost months
+        
+        for (let i = 0; i < parsed.data.length; i++) {
+            const row = parsed.data[i];
+            
+            // Skip empty rows
+            if (!row.Employee_Name) continue;
+            
+            try {
+                // Generate 5-digit employee ID
+                const employee_id = Math.floor(10000 + Math.random() * 90000);
+                
+                // Insert employee data
+                const employeeQuery = `
+                    INSERT INTO employees (
+                        employee_id, employee_name, department, role, status, lcat, 
+                        education_level, priced_salary, current_salary, bill_rate, 
+                        start_date, end_date, notes
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                `;
+                
+                await db.query(employeeQuery, [
+                    employee_id,
+                    row.Employee_Name,
+                    row.Department || 'Engineering',
+                    row.Role || 'Employee',
+                    row.Status || 'Active',
+                    row.LCAT || 'Software Engineer (SWE)',
+                    row.Education_Level || "Bachelor's Degree",
+                    parseFloat(row.Priced_Salary) || 0,
+                    parseFloat(row.Current_Salary) || 0,
+                    parseFloat(row.Bill_Rate) || 0,
+                    row.Start_Date || new Date().toISOString().split('T')[0],
+                    row.End_Date || null,
+                    row.Notes || ''
+                ]);
+                
+                results.employees_imported++;
+                
+                // Process monthly data for each month
+                const months = [
+                    'JAN_2024', 'FEB_2024', 'MAR_2024', 'APR_2024', 'MAY_2024', 'JUN_2024',
+                    'JUL_2024', 'AUG_2024', 'SEP_2024', 'OCT_2024', 'NOV_2024', 'DEC_2024',
+                    'JAN_2025', 'FEB_2025', 'MAR_2025', 'APR_2025', 'MAY_2025', 'JUN_2025'
+                ];
+                
+                for (const month of months) {
+                    const hoursField = `${month}_Hours`;
+                    const revenueField = `${month}_Revenue`;
+                    
+                    if (row[hoursField] || row[revenueField]) {
+                        const monthValue = month.replace('_', '-').toLowerCase();
+                        
+                        const monthlyQuery = `
+                            INSERT INTO monthly_data (
+                                employee_id, month, hours, revenue
+                            ) VALUES ($1, $2, $3, $4)
+                            ON CONFLICT (employee_id, month) 
+                            DO UPDATE SET hours = $3, revenue = $4
+                        `;
+                        
+                        await db.query(monthlyQuery, [
+                            employee_id,
+                            monthValue,
+                            parseFloat(row[hoursField]) || 0,
+                            parseFloat(row[revenueField]) || 0
+                        ]);
+                        
+                        results.monthly_data_imported++;
+                    }
+                }
+                
+                // Process indirect costs (only once per month to avoid duplicates)
+                if (row.Indirect_Costs_Month && !processedIndirectCosts.has(row.Indirect_Costs_Month)) {
+                    const indirectQuery = `
+                        INSERT INTO monthly_indirect_costs (
+                            month, fringe_amount, overhead_amount, ga_amount, profit_amount, notes
+                        ) VALUES ($1, $2, $3, $4, $5, $6)
+                        ON CONFLICT (month) 
+                        DO UPDATE SET 
+                            fringe_amount = $2, 
+                            overhead_amount = $3, 
+                            ga_amount = $4, 
+                            profit_amount = $5, 
+                            notes = $6
+                    `;
+                    
+                    await db.query(indirectQuery, [
+                        row.Indirect_Costs_Month,
+                        parseFloat(row.Fringe_Amount) || 0,
+                        parseFloat(row.Overhead_Amount) || 0,
+                        parseFloat(row.GA_Amount) || 0,
+                        parseFloat(row.Profit_Amount) || 0,
+                        row.Indirect_Notes || ''
+                    ]);
+                    
+                    processedIndirectCosts.add(row.Indirect_Costs_Month);
+                    results.indirect_costs_imported++;
+                }
+                
+            } catch (error) {
+                results.errors.push({ 
+                    row: i + 2, 
+                    employee: row.Employee_Name,
+                    error: error.message 
+                });
+            }
+        }
+        
+        res.json({
+            message: `Successfully imported ${results.employees_imported} employees, ${results.monthly_data_imported} monthly records, and ${results.indirect_costs_imported} indirect cost months`,
+            results: results
+        });
+        
+    } catch (error) {
+        console.error('Error in consolidated import:', error);
+        res.status(500).json({ message: 'Import failed', error: error.message });
+    }
+});
+
+// Legacy employee import endpoint (keep for backward compatibility)
 app.post('/api/import', authMiddleware, upload.single('file'), async (req, res) => {
     try {
         if (!req.file) {
@@ -292,38 +434,85 @@ app.post('/api/import', authMiddleware, upload.single('file'), async (req, res) 
             return res.status(400).json({ message: 'CSV parse error', errors: parsed.errors });
         }
         
-        const employees = [];
-        const errors = [];
+        const results = {
+            employees_imported: 0,
+            monthly_data_imported: 0,
+            errors: []
+        };
         
         for (let i = 0; i < parsed.data.length; i++) {
             const row = parsed.data[i];
+            
+            if (!row.Employee_Name) continue;
+            
             try {
-                const employee = new Employee({
-                    employee_name: row.Employee_Name,
-                    department: row.Department,
-                    lcat: row.LCAT,
-                    education_level: row.Education_Level,
-                    years_experience: parseInt(row.Years_Experience) || 0,
-                    priced_salary: parseFloat(row.Priced_Salary) || 0,
-                    current_salary: parseFloat(row.Current_Salary) || 0,
-                    hours_per_month: parseFloat(row.Hours_Per_Month) || 160,
-                    start_date: new Date(row.Start_Date),
-                    end_date: row.End_Date ? new Date(row.End_Date) : undefined,
-                    notes: row.Notes || ''
-                });
+                // Generate 5-digit employee ID
+                const employee_id = Math.floor(10000 + Math.random() * 90000);
                 
-                await employee.save();
-                employees.push(employee);
+                // Insert employee data using PostgreSQL
+                const employeeQuery = `
+                    INSERT INTO employees (
+                        employee_id, employee_name, department, role, status, lcat, 
+                        education_level, priced_salary, current_salary, bill_rate, 
+                        start_date, end_date, notes
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                `;
+                
+                await db.query(employeeQuery, [
+                    employee_id,
+                    row.Employee_Name,
+                    row.Department || 'Engineering',
+                    row.Role || 'Employee',
+                    row.Status || 'Active',
+                    row.LCAT || 'Software Engineer (SWE)',
+                    row.Education_Level || "Bachelor's Degree",
+                    parseFloat(row.Priced_Salary) || 0,
+                    parseFloat(row.Current_Salary) || 0,
+                    parseFloat(row.Bill_Rate) || 0,
+                    row.Start_Date || new Date().toISOString().split('T')[0],
+                    row.End_Date || null,
+                    row.Notes || ''
+                ]);
+                
+                results.employees_imported++;
+                
+                // Process monthly billing data if present
+                const monthlyFields = [
+                    'JAN_FEB_2024_Revenue', 'FEB_MAR_2024_Revenue', 'MAR_APR_2024_Revenue',
+                    'APR_MAY_2024_Revenue', 'MAY_JUN_2024_Revenue', 'JUN_JUL_2024_Revenue',
+                    'JUL_AUG_2024_Revenue', 'AUG_SEP_2024_Revenue', 'SEP_OCT_2024_Revenue',
+                    'OCT_NOV_2024_Revenue', 'NOV_DEC_2024_Revenue', 'DEC_JAN_2024_Revenue'
+                ];
+                
+                for (let j = 0; j < monthlyFields.length; j++) {
+                    const field = monthlyFields[j];
+                    if (row[field]) {
+                        const month = `2024-${String(j + 1).padStart(2, '0')}`;
+                        const revenue = parseFloat(row[field]) || 0;
+                        const hours = revenue > 0 ? Math.round(revenue / (parseFloat(row.Bill_Rate) || 75)) : 0;
+                        
+                        const monthlyQuery = `
+                            INSERT INTO monthly_data (employee_id, month, hours, revenue)
+                            VALUES ($1, $2, $3, $4)
+                            ON CONFLICT (employee_id, month) 
+                            DO UPDATE SET hours = $3, revenue = $4
+                        `;
+                        
+                        await db.query(monthlyQuery, [employee_id, month, hours, revenue]);
+                        results.monthly_data_imported++;
+                    }
+                }
+                
             } catch (error) {
-                errors.push({ row: i + 1, error: error.message });
+                results.errors.push({ row: i + 2, error: error.message });
             }
         }
         
         res.json({
-            message: `Successfully imported ${employees.length} employees`,
-            imported: employees.length,
-            errors: errors
+            message: `Successfully imported ${results.employees_imported} employees with ${results.monthly_data_imported} monthly records`,
+            results: results
         });
+        
     } catch (error) {
         console.error('Error importing employees:', error);
         res.status(500).json({ message: 'Import failed', error: error.message });

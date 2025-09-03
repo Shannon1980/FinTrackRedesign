@@ -2043,6 +2043,98 @@ async function importIndirectCosts() {
     }
 }
 
+// Consolidated Import Function
+async function importConsolidated() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.name.toLowerCase().endsWith('.csv')) {
+            app.showAlert('danger', 'Please select a CSV file');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            app.showAlert('info', 'Importing consolidated data (employees, monthly data, and indirect costs)...');
+
+            const headers = {};
+            if (app.authToken) {
+                headers['Authorization'] = `Bearer ${app.authToken}`;
+            }
+
+            const response = await fetch('/api/import/consolidated', {
+                method: 'POST',
+                headers: headers,
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                app.showAlert('success', result.message);
+                
+                // Show detailed results if available
+                if (result.results) {
+                    let details = [];
+                    if (result.results.employees_imported > 0) {
+                        details.push(`${result.results.employees_imported} employees imported`);
+                    }
+                    if (result.results.monthly_data_imported > 0) {
+                        details.push(`${result.results.monthly_data_imported} monthly records imported`);
+                    }
+                    if (result.results.indirect_costs_imported > 0) {
+                        details.push(`${result.results.indirect_costs_imported} indirect cost months imported`);
+                    }
+                    if (result.results.errors && result.results.errors.length > 0) {
+                        details.push(`${result.results.errors.length} errors occurred`);
+                        console.log('Import errors:', result.results.errors);
+                        app.showAlert('warning', 'Some records had errors. Check console for details.');
+                    }
+                    
+                    if (details.length > 0) {
+                        app.showAlert('info', 'Import Details: ' + details.join(', '));
+                    }
+                }
+                
+                // Refresh relevant data
+                loadEmployees();
+                if (typeof loadAllIndirectCosts === 'function') {
+                    loadAllIndirectCosts();
+                }
+                
+            } else {
+                app.showAlert('danger', 'Import failed: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Consolidated import error:', error);
+            app.showAlert('danger', 'Import failed: ' + error.message);
+        }
+    };
+    input.click();
+}
+
+// Download consolidated template function
+function downloadConsolidatedTemplate() {
+    const filename = 'consolidated_import_template.csv';
+    const url = `/${filename}`;
+    
+    // Create download link
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    app.showAlert('success', 'Consolidated template downloaded! This file includes employee data, monthly hours/revenue, and indirect costs in one CSV.');
+}
+
 async function importOdcItems() {
     await importDataHelper('/api/import/odc-items', 'odcFile', 'ODC items imported successfully');
     
