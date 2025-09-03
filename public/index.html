@@ -266,14 +266,14 @@
                     <div class="card-body">
                         <!-- Billing Period Selection -->
                         <div class="row mb-4">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label class="form-label">Year</label>
                                 <select class="form-select" id="billingYear">
                                     <option value="2024">2024</option>
                                     <option value="2025">2025</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label">Billing Period</label>
                                 <select class="form-select" id="billingPeriod">
                                     <option value="JAN-FEB">JAN-FEB</option>
@@ -288,6 +288,14 @@
                                     <option value="OCT-NOV">OCT-NOV</option>
                                     <option value="NOV-DEC">NOV-DEC</option>
                                     <option value="DEC-JAN">DEC-JAN</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Employee Status</label>
+                                <select class="form-select" id="billingStatusFilter">
+                                    <option value="all">All Employees</option>
+                                    <option value="active">Active Only</option>
+                                    <option value="inactive">Inactive Only</option>
                                 </select>
                             </div>
                             <div class="col-md-3 d-flex align-items-end">
@@ -362,6 +370,8 @@
                                 <thead class="table-dark">
                                     <tr>
                                         <th>Employee</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
                                         <th>Bill Rate</th>
                                         <th>Projected Hours</th>
                                         <th>Actual Hours</th>
@@ -702,6 +712,24 @@
                                 <select class="form-select" id="employeeStatus">
                                     <option value="Active">Active</option>
                                     <option value="Inactive">Inactive</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Employee Type</label>
+                                <select class="form-select" id="employeeType" onchange="toggleSubcontractorField()">
+                                    <option value="">Select Type</option>
+                                    <option value="Employee">Employee</option>
+                                    <option value="Subcontractor">Subcontractor</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3" id="subcontractorCompanyField" style="display: none;">
+                                <label class="form-label">Subcontractor Company</label>
+                                <select class="form-select" id="subcontractorCompany">
+                                    <option value="">Select Company</option>
+                                    <option value="Aquia">Aquia</option>
+                                    <option value="Friends">Friends</option>
+                                    <option value="Beeline">Beeline</option>
+                                    <option value="Self Employed">Self Employed</option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">

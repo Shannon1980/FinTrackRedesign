@@ -787,6 +787,7 @@ app.get('/api/monthly-billing-summary/:year/:month', authMiddleware, async (req,
     try {
         const year = parseInt(req.params.year);
         const month = parseInt(req.params.month);
+        const statusFilter = req.query.status || 'all';
         const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
         
         // Demo data for when MongoDB is not connected

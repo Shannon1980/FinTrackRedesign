@@ -498,6 +498,11 @@ class FinancialTracker {
         document.getElementById('employeeStartDate').value = employee.start_date ? employee.start_date.split('T')[0] : '';
         document.getElementById('employeeEndDate').value = employee.end_date ? employee.end_date.split('T')[0] : '';
         document.getElementById('employeeNotes').value = employee.notes || '';
+        document.getElementById('employeeType').value = employee.employee_type || '';
+        document.getElementById('subcontractorCompany').value = employee.subcontractor_company || '';
+        
+        // Show/hide subcontractor field based on employee type
+        toggleSubcontractorField();
     }
 
     async saveEmployee() {
@@ -520,7 +525,9 @@ class FinancialTracker {
             bill_rate: parseFloat(document.getElementById('employeeBillRate').value),
             start_date: document.getElementById('employeeStartDate').value,
             end_date: document.getElementById('employeeEndDate').value || null,
-            notes: document.getElementById('employeeNotes').value
+            notes: document.getElementById('employeeNotes').value,
+            employee_type: document.getElementById('employeeType').value,
+            subcontractor_company: document.getElementById('subcontractorCompany').value
         };
 
         try {
@@ -1155,7 +1162,10 @@ async function loadBillingSummary(year, month) {
             headers['Authorization'] = `Bearer ${app.authToken}`;
         }
         
-        const response = await fetch(`/api/monthly-billing-summary/${year}/${month}`, {
+        const statusFilter = document.getElementById('billingStatusFilter').value;
+        const url = `/api/monthly-billing-summary/${year}/${month}?status=${statusFilter}`;
+        
+        const response = await fetch(url, {
             headers: headers
         });
         
@@ -1599,6 +1609,19 @@ async function importOdcItems() {
     const costDisplay = document.getElementById('costSummaryDisplay');
     if (costDisplay.style.display !== 'none') {
         await loadProjectCosts();
+    }
+}
+
+// Function to toggle subcontractor company field
+function toggleSubcontractorField() {
+    const employeeType = document.getElementById('employeeType').value;
+    const subcontractorField = document.getElementById('subcontractorCompanyField');
+    
+    if (employeeType === 'Subcontractor') {
+        subcontractorField.style.display = 'block';
+    } else {
+        subcontractorField.style.display = 'none';
+        document.getElementById('subcontractorCompany').value = '';
     }
 }
 
