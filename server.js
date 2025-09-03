@@ -344,19 +344,22 @@ app.post('/api/import/consolidated', authMiddleware, upload.single('file'), asyn
                 
                 results.employees_imported++;
                 
-                // Process monthly data for each month
+                // Process monthly data for each month (revenue only, calculate hours from bill rate)
                 const months = [
                     'JAN_2024', 'FEB_2024', 'MAR_2024', 'APR_2024', 'MAY_2024', 'JUN_2024',
                     'JUL_2024', 'AUG_2024', 'SEP_2024', 'OCT_2024', 'NOV_2024', 'DEC_2024',
                     'JAN_2025', 'FEB_2025', 'MAR_2025', 'APR_2025', 'MAY_2025', 'JUN_2025'
                 ];
                 
+                const billRate = parseFloat(row.Bill_Rate) || 75; // Default bill rate
+                
                 for (const month of months) {
-                    const hoursField = `${month}_Hours`;
                     const revenueField = `${month}_Revenue`;
                     
-                    if (row[hoursField] || row[revenueField]) {
+                    if (row[revenueField] && parseFloat(row[revenueField]) > 0) {
                         const monthValue = month.replace('_', '-').toLowerCase();
+                        const revenue = parseFloat(row[revenueField]);
+                        const hours = Math.round(revenue / billRate); // Calculate hours from revenue and bill rate
                         
                         const monthlyQuery = `
                             INSERT INTO monthly_data (
@@ -369,8 +372,8 @@ app.post('/api/import/consolidated', authMiddleware, upload.single('file'), asyn
                         await db.query(monthlyQuery, [
                             employee_id,
                             monthValue,
-                            parseFloat(row[hoursField]) || 0,
-                            parseFloat(row[revenueField]) || 0
+                            hours,
+                            revenue
                         ]);
                         
                         results.monthly_data_imported++;
