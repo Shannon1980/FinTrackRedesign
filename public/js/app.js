@@ -764,13 +764,12 @@ class FinancialTracker {
     }
 
     downloadIndirectCostTemplate() {
-        const currentYear = new Date().getFullYear();
-        const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0');
-        
+        // Use the template data from the static CSV file
         const csvContent = [
             'Month,Fringe_Amount,Overhead_Amount,GA_Amount,Profit_Amount,Notes',
-            `${currentYear}-${currentMonth},7500.00,12000.00,2500.00,1500.00,Monthly indirect costs for ${currentYear}-${currentMonth}`,
-            `${currentYear}-${(parseInt(currentMonth) + 1).toString().padStart(2, '0')},7800.00,12200.00,2600.00,1600.00,Monthly indirect costs for next month`,
+            '2025-01,7500.00,12000.00,2500.00,1500.00,Monthly indirect costs for January 2025',
+            '2025-02,7800.00,12200.00,2600.00,1600.00,Monthly indirect costs for February 2025',
+            '2025-03,7500.00,12000.00,2500.00,1500.00,Monthly indirect costs for March 2025',
             ',,,,,',
         ].join('\n');
 
@@ -778,11 +777,11 @@ class FinancialTracker {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `monthly_indirect_costs_template_${new Date().toISOString().split('T')[0]}.csv`;
+        a.download = `indirect_costs_template_${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         window.URL.revokeObjectURL(url);
         
-        this.showAlert('success', 'Monthly indirect costs template downloaded!');
+        this.showAlert('success', 'Indirect costs template downloaded!');
     }
 
     downloadOdcTemplate() {
@@ -1293,8 +1292,13 @@ async function loadIndirectCosts() {
     const [year, month] = monthInput.split('-');
     
     try {
+        const headers = {};
+        if (app.authToken) {
+            headers['Authorization'] = `Bearer ${app.authToken}`;
+        }
+        
         const response = await fetch(`/api/indirect-costs/${year}/${month}`, {
-            headers: { 'Authorization': `Bearer ${app.authToken}` }
+            headers: headers
         });
         
         if (response.ok) {
@@ -1333,12 +1337,16 @@ async function saveIndirectCosts() {
     };
     
     try {
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        if (app.authToken) {
+            headers['Authorization'] = `Bearer ${app.authToken}`;
+        }
+        
         const response = await fetch('/api/indirect-costs', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${app.authToken}`
-            },
+            headers: headers,
             body: JSON.stringify(data)
         });
         
