@@ -421,11 +421,17 @@ class FinancialTracker {
         const totalPriced = this.employees.reduce((sum, emp) => sum + (emp.priced_salary || 0), 0);
         const costVariance = totalSalary - totalPriced;
 
-        document.getElementById('teamSize').textContent = teamSize;
-        document.getElementById('totalSalary').textContent = '$' + totalSalary.toLocaleString();
-        document.getElementById('totalHours').textContent = totalHours.toLocaleString();
-        document.getElementById('costVariance').textContent = '$' + costVariance.toLocaleString();
-        document.getElementById('costVariance').className = costVariance >= 0 ? 'text-danger' : 'text-success';
+        // Update elements if they exist
+        const teamSizeEl = document.getElementById('teamSize');
+        const totalHoursEl = document.getElementById('totalHours');
+        const costVarianceEl = document.getElementById('costVariance');
+        
+        if (teamSizeEl) teamSizeEl.textContent = teamSize;
+        if (totalHoursEl) totalHoursEl.textContent = totalHours.toLocaleString();
+        if (costVarianceEl) {
+            costVarianceEl.textContent = '$' + costVariance.toLocaleString();
+            costVarianceEl.className = costVariance >= 0 ? 'text-danger' : 'text-success';
+        }
         
         // Load profit/loss data
         this.loadProfitLoss();
@@ -443,20 +449,13 @@ class FinancialTracker {
                 const profitLossData = await response.json();
                 
                 // Update profit/loss dashboard cards
-                document.getElementById('totalRevenue').textContent = '$' + profitLossData.revenue.toLocaleString();
-                document.getElementById('totalCosts').textContent = '$' + profitLossData.costs.toLocaleString();
-                document.getElementById('profitLoss').textContent = '$' + profitLossData.profit.toLocaleString();
-                document.getElementById('profitMargin').textContent = profitLossData.profitMargin + '%';
+                const totalRevenueEl = document.getElementById('totalRevenue');
+                const totalCostsEl = document.getElementById('totalCosts');
+                const profitMarginEl = document.getElementById('profitMargin');
                 
-                // Update profit/loss card color based on profit value
-                const profitLossCard = document.getElementById('profitLossCard');
-                if (profitLossData.profit > 0) {
-                    profitLossCard.className = 'card text-center p-3 bg-success text-white';
-                } else if (profitLossData.profit < 0) {
-                    profitLossCard.className = 'card text-center p-3 bg-danger text-white';
-                } else {
-                    profitLossCard.className = 'card text-center p-3 bg-warning text-dark';
-                }
+                if (totalRevenueEl) totalRevenueEl.textContent = '$' + profitLossData.revenue.toLocaleString();
+                if (totalCostsEl) totalCostsEl.textContent = '$' + profitLossData.costs.toLocaleString();
+                if (profitMarginEl) profitMarginEl.textContent = profitLossData.profitMargin + '%';
             }
         } catch (error) {
             console.error('Error loading profit/loss:', error);
@@ -1872,10 +1871,16 @@ function displayLaborBreakdown(breakdown) {
 
 // Helper function to clear filters
 function clearFilters() {
-    document.getElementById('nameSearch').value = '';
-    document.getElementById('statusFilter').value = '';
-    document.getElementById('departmentFilter').value = '';
-    document.getElementById('roleFilter').value = '';
+    const nameSearch = document.getElementById('nameSearch');
+    const statusFilter = document.getElementById('statusFilter');
+    const departmentFilter = document.getElementById('departmentFilter');
+    const roleFilter = document.getElementById('roleFilter');
+    
+    if (nameSearch) nameSearch.value = '';
+    if (statusFilter) statusFilter.value = '';
+    if (departmentFilter) departmentFilter.value = '';
+    if (roleFilter) roleFilter.value = '';
+    
     filterEmployees();
 }
 
