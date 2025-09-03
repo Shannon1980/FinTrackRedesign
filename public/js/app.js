@@ -1459,6 +1459,12 @@ async function loadProjectCosts() {
     }
 }
 
+// Global variables for storing data and sort state
+let allIndirectCosts = [];
+let allOdcItems = [];
+let indirectCostsSortState = { column: '', direction: 'asc' };
+let odcItemsSortState = { column: '', direction: 'asc' };
+
 function renderOdcTable(odcItems) {
     const tbody = document.getElementById('odcTable');
     
@@ -1480,6 +1486,169 @@ function renderOdcTable(odcItems) {
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Load all indirect costs from backend
+async function loadAllIndirectCosts() {
+    try {
+        const headers = {};
+        if (app.authToken) {
+            headers['Authorization'] = `Bearer ${app.authToken}`;
+        }
+        
+        const response = await fetch('/api/all-indirect-costs', {
+            headers: headers
+        });
+        
+        if (response.ok) {
+            const costs = await response.json();
+            allIndirectCosts = costs;
+            filterIndirectCosts();
+            app.showAlert('success', 'Indirect costs loaded successfully');
+        } else {
+            app.showAlert('warning', 'No indirect costs found');
+        }
+    } catch (error) {
+        console.error('Error loading indirect costs:', error);
+        app.showAlert('danger', 'Error loading indirect costs: ' + error.message);
+    }
+}
+
+// Load all ODC items from backend
+async function loadAllOdcItems() {
+    try {
+        const headers = {};
+        if (app.authToken) {
+            headers['Authorization'] = `Bearer ${app.authToken}`;
+        }
+        
+        const response = await fetch('/api/all-odc-items', {
+            headers: headers
+        });
+        
+        if (response.ok) {
+            const items = await response.json();
+            allOdcItems = items;
+            filterOdcItems();
+            app.showAlert('success', 'ODC items loaded successfully');
+        } else {
+            app.showAlert('warning', 'No ODC items found');
+        }
+    } catch (error) {
+        console.error('Error loading ODC items:', error);
+        app.showAlert('danger', 'Error loading ODC items: ' + error.message);
+    }
+}
+
+// Filter indirect costs based on selected filters
+function filterIndirectCosts() {
+    const yearFilter = document.getElementById('indirectCostFilterYear').value;
+    const typeFilter = document.getElementById('indirectCostFilterType').value;
+    
+    let filtered = allIndirectCosts.filter(cost => {
+        const matchesYear = !yearFilter || cost.month.startsWith(yearFilter);
+        const matchesType = !typeFilter || cost.type === typeFilter;
+        return matchesYear && matchesType;
+    });
+    
+    renderIndirectCostsTable(filtered);
+}
+
+// Filter ODC items based on selected filters
+function filterOdcItems() {
+    const yearFilter = document.getElementById('odcFilterYear').value;
+    const monthFilter = document.getElementById('odcFilterMonth').value;
+    const categoryFilter = document.getElementById('odcFilterCategory').value;
+    
+    let filtered = allOdcItems.filter(item => {
+        const matchesYear = !yearFilter || item.month.startsWith(yearFilter);
+        const matchesMonth = !monthFilter || item.month.endsWith('-' + monthFilter);
+        const matchesCategory = !categoryFilter || item.category === categoryFilter;
+        return matchesYear && matchesMonth && matchesCategory;
+    });
+    
+    renderOdcTable(filtered);
+}
+
+// Sort indirect costs
+function sortIndirectCosts(column) {
+    if (indirectCostsSortState.column === column) {
+        indirectCostsSortState.direction = indirectCostsSortState.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        indirectCostsSortState.column = column;
+        indirectCostsSortState.direction = 'asc';
+    }
+    
+    allIndirectCosts.sort((a, b) => {
+        let valA = a[column];
+        let valB = b[column];
+        
+        if (column === 'amount') {
+            valA = parseFloat(valA);
+            valB = parseFloat(valB);
+        }
+        
+        if (valA < valB) return indirectCostsSortState.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return indirectCostsSortState.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+    
+    filterIndirectCosts();
+}
+
+// Sort ODC items
+function sortOdcItems(column) {
+    if (odcItemsSortState.column === column) {
+        odcItemsSortState.direction = odcItemsSortState.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        odcItemsSortState.column = column;
+        odcItemsSortState.direction = 'asc';
+    }
+    
+    allOdcItems.sort((a, b) => {
+        let valA = a[column];
+        let valB = b[column];
+        
+        if (column === 'amount') {
+            valA = parseFloat(valA);
+            valB = parseFloat(valB);
+        }
+        
+        if (valA < valB) return odcItemsSortState.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return odcItemsSortState.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+    
+    filterOdcItems();
+}
+
+// Render indirect costs table
+function renderIndirectCostsTable(costs) {
+    const tbody = document.getElementById('indirectCostsTable');
+    
+    if (!costs || costs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No indirect costs match the selected filters</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = costs.map(cost => {
+        const typeLabel = cost.type.charAt(0).toUpperCase() + cost.type.slice(1);
+        const badgeClass = {
+            'fringe': 'bg-success',
+            'overhead': 'bg-primary', 
+            'ga': 'bg-warning',
+            'profit': 'bg-info'
+        }[cost.type] || 'bg-secondary';
+        
+        return `
+            <tr>
+                <td>${cost.month}</td>
+                <td><span class="badge ${badgeClass}">${typeLabel}</span></td>
+                <td>$${cost.amount.toLocaleString()}</td>
+                <td>${cost.notes || '-'}</td>
             </tr>
         `;
     }).join('');

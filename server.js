@@ -781,6 +781,72 @@ app.post('/api/employees/:id/monthly-billing', authMiddleware, async (req, res) 
     }
 });
 
+// GET /api/all-indirect-costs - Get all indirect costs
+app.get('/api/all-indirect-costs', authMiddleware, async (req, res) => {
+    try {
+        // Demo data for when MongoDB is not connected
+        if (mongoose.connection.readyState !== 1) {
+            const demoIndirectCosts = [
+                { month: '2024-01', type: 'fringe', amount: 7500, notes: 'January fringe costs' },
+                { month: '2024-01', type: 'overhead', amount: 12000, notes: 'January overhead costs' },
+                { month: '2024-01', type: 'ga', amount: 2500, notes: 'January G&A costs' },
+                { month: '2024-01', type: 'profit', amount: 1500, notes: 'January profit' },
+                { month: '2024-02', type: 'fringe', amount: 8000, notes: 'February fringe costs' },
+                { month: '2024-02', type: 'overhead', amount: 12500, notes: 'February overhead costs' },
+                { month: '2024-02', type: 'ga', amount: 2700, notes: 'February G&A costs' },
+                { month: '2024-02', type: 'profit', amount: 1600, notes: 'February profit' },
+                { month: '2025-01', type: 'fringe', amount: 8200, notes: 'January 2025 fringe costs' },
+                { month: '2025-01', type: 'overhead', amount: 13000, notes: 'January 2025 overhead costs' }
+            ];
+            return res.json(demoIndirectCosts);
+        }
+        
+        // For real database, would query IndirectCost collection
+        const indirectCosts = await IndirectCost.find({}).sort({ month: 1, type: 1 });
+        
+        // Transform to flat structure for table display
+        const flatCosts = [];
+        indirectCosts.forEach(cost => {
+            if (cost.fringe_amount > 0) flatCosts.push({ month: cost.month, type: 'fringe', amount: cost.fringe_amount, notes: cost.notes });
+            if (cost.overhead_amount > 0) flatCosts.push({ month: cost.month, type: 'overhead', amount: cost.overhead_amount, notes: cost.notes });
+            if (cost.ga_amount > 0) flatCosts.push({ month: cost.month, type: 'ga', amount: cost.ga_amount, notes: cost.notes });
+            if (cost.profit_amount > 0) flatCosts.push({ month: cost.month, type: 'profit', amount: cost.profit_amount, notes: cost.notes });
+        });
+        
+        res.json(flatCosts);
+    } catch (error) {
+        console.error('Error fetching all indirect costs:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// GET /api/all-odc-items - Get all ODC items
+app.get('/api/all-odc-items', authMiddleware, async (req, res) => {
+    try {
+        // Demo data for when MongoDB is not connected
+        if (mongoose.connection.readyState !== 1) {
+            const demoOdcItems = [
+                { month: '2024-01', category: 'Travel', description: 'Client site visit', amount: 2500, notes: 'Flight and hotel' },
+                { month: '2024-01', category: 'Software', description: 'Development tools license', amount: 1200, notes: 'Annual subscription' },
+                { month: '2024-01', category: 'Equipment', description: 'Laptop for new hire', amount: 3200, notes: 'MacBook Pro' },
+                { month: '2024-02', category: 'Travel', description: 'Conference attendance', amount: 1800, notes: 'Tech conference' },
+                { month: '2024-02', category: 'Consulting', description: 'Security audit', amount: 5000, notes: 'External consultant' },
+                { month: '2024-03', category: 'Software', description: 'Cloud storage', amount: 800, notes: 'Monthly storage costs' },
+                { month: '2025-01', category: 'Equipment', description: 'New workstation', amount: 2800, notes: 'Development machine' },
+                { month: '2025-01', category: 'Travel', description: 'Client meeting', amount: 1200, notes: 'Round trip flight' }
+            ];
+            return res.json(demoOdcItems);
+        }
+        
+        // For real database, would query ODCItem collection
+        const odcItems = await ODCItem.find({}).sort({ month: 1, category: 1 });
+        res.json(odcItems);
+    } catch (error) {
+        console.error('Error fetching all ODC items:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
 // GET /api/monthly-billing-summary/:year/:month - Get billing summary for all employees
 app.get('/api/monthly-billing-summary/:year/:month', authMiddleware, async (req, res) => {
     try {

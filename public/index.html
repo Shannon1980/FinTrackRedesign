@@ -465,68 +465,65 @@
                         </div>
                     </div>
 
-                    <!-- Monthly Project Costs Summary -->
+                    <!-- Indirect Costs Table -->
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-header">
                                 <h5 class="mb-0">
-                                    <i class="fas fa-chart-pie me-2"></i> Monthly Cost Summary
+                                    <i class="fas fa-chart-pie me-2"></i> Indirect Costs History
                                 </h5>
                             </div>
                             <div class="card-body">
+                                <!-- Filters -->
                                 <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <select class="form-select" id="costSummaryYear">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Filter by Year</label>
+                                        <select class="form-select" id="indirectCostFilterYear" onchange="filterIndirectCosts()">
+                                            <option value="">All Years</option>
                                             <option value="2024">2024</option>
                                             <option value="2025">2025</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-6">
-                                        <select class="form-select" id="costSummaryMonth">
-                                            <option value="1">January</option>
-                                            <option value="2">February</option>
-                                            <option value="3">March</option>
-                                            <option value="4">April</option>
-                                            <option value="5">May</option>
-                                            <option value="6">June</option>
-                                            <option value="7">July</option>
-                                            <option value="8">August</option>
-                                            <option value="9">September</option>
-                                            <option value="10">October</option>
-                                            <option value="11">November</option>
-                                            <option value="12">December</option>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Filter by Cost Type</label>
+                                        <select class="form-select" id="indirectCostFilterType" onchange="filterIndirectCosts()">
+                                            <option value="">All Types</option>
+                                            <option value="fringe">Fringe</option>
+                                            <option value="overhead">Overhead</option>
+                                            <option value="ga">G&A</option>
+                                            <option value="profit">Profit</option>
                                         </select>
                                     </div>
-                                </div>
-                                <button class="btn btn-info mb-3" onclick="loadProjectCosts()">
-                                    <i class="fas fa-refresh me-1"></i> Load Month Costs
-                                </button>
-                                
-                                <div id="costSummaryDisplay" style="display: none;">
-                                    <div class="row">
-                                        <div class="col-12 mb-2">
-                                            <strong>Direct Labor:</strong> <span id="directLaborCost">$0</span>
-                                        </div>
-                                        <div class="col-12 mb-2">
-                                            <strong>ODC Total:</strong> <span id="totalOdcCost">$0</span>
-                                        </div>
-                                        <div class="col-12 mb-2">
-                                            <strong>Fringe:</strong> <span id="fringeCost">$0</span>
-                                        </div>
-                                        <div class="col-12 mb-2">
-                                            <strong>Overhead:</strong> <span id="overheadCost">$0</span>
-                                        </div>
-                                        <div class="col-12 mb-2">
-                                            <strong>G&A:</strong> <span id="gaCost">$0</span>
-                                        </div>
-                                        <div class="col-12 mb-2">
-                                            <strong>Profit:</strong> <span id="profitCost">$0</span>
-                                        </div>
-                                        <hr>
-                                        <div class="col-12">
-                                            <h6><strong>Total Cost:</strong> <span id="totalProjectCost">$0</span></h6>
-                                        </div>
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <button class="btn btn-primary" onclick="loadAllIndirectCosts()">
+                                            <i class="fas fa-refresh me-1"></i> Load All
+                                        </button>
                                     </div>
+                                </div>
+                                
+                                <!-- Indirect Costs Table -->
+                                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                    <table class="table table-hover table-sm">
+                                        <thead class="table-dark sticky-top">
+                                            <tr>
+                                                <th style="cursor: pointer;" onclick="sortIndirectCosts('month')">
+                                                    Month <i class="fas fa-sort"></i>
+                                                </th>
+                                                <th style="cursor: pointer;" onclick="sortIndirectCosts('type')">
+                                                    Type <i class="fas fa-sort"></i>
+                                                </th>
+                                                <th style="cursor: pointer;" onclick="sortIndirectCosts('amount')">
+                                                    Amount <i class="fas fa-sort"></i>
+                                                </th>
+                                                <th>Notes</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="indirectCostsTable">
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted">Click "Load All" to view indirect costs</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -574,22 +571,76 @@
                                 </div>
                                 <hr>
                                 
+                                <!-- ODC Filters -->
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Filter by Year</label>
+                                        <select class="form-select" id="odcFilterYear" onchange="filterOdcItems()">
+                                            <option value="">All Years</option>
+                                            <option value="2024">2024</option>
+                                            <option value="2025">2025</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Filter by Month</label>
+                                        <select class="form-select" id="odcFilterMonth" onchange="filterOdcItems()">
+                                            <option value="">All Months</option>
+                                            <option value="01">January</option>
+                                            <option value="02">February</option>
+                                            <option value="03">March</option>
+                                            <option value="04">April</option>
+                                            <option value="05">May</option>
+                                            <option value="06">June</option>
+                                            <option value="07">July</option>
+                                            <option value="08">August</option>
+                                            <option value="09">September</option>
+                                            <option value="10">October</option>
+                                            <option value="11">November</option>
+                                            <option value="12">December</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Filter by Category</label>
+                                        <select class="form-select" id="odcFilterCategory" onchange="filterOdcItems()">
+                                            <option value="">All Categories</option>
+                                            <option value="Travel">Travel</option>
+                                            <option value="Equipment">Equipment</option>
+                                            <option value="Software">Software</option>
+                                            <option value="Consulting">Consulting</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button class="btn btn-primary" onclick="loadAllOdcItems()">
+                                            <i class="fas fa-refresh me-1"></i> Load All
+                                        </button>
+                                    </div>
+                                </div>
+                                
                                 <!-- ODC Table -->
-                                <div class="table-responsive">
+                                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                                     <table class="table table-hover">
-                                        <thead class="table-dark">
+                                        <thead class="table-dark sticky-top">
                                             <tr>
-                                                <th>Month</th>
-                                                <th>Category</th>
-                                                <th>Description</th>
-                                                <th>Amount</th>
+                                                <th style="cursor: pointer;" onclick="sortOdcItems('month')">
+                                                    Month <i class="fas fa-sort"></i>
+                                                </th>
+                                                <th style="cursor: pointer;" onclick="sortOdcItems('category')">
+                                                    Category <i class="fas fa-sort"></i>
+                                                </th>
+                                                <th style="cursor: pointer;" onclick="sortOdcItems('description')">
+                                                    Description <i class="fas fa-sort"></i>
+                                                </th>
+                                                <th style="cursor: pointer;" onclick="sortOdcItems('amount')">
+                                                    Amount <i class="fas fa-sort"></i>
+                                                </th>
                                                 <th>Notes</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody id="odcTable">
                                             <tr>
-                                                <td colspan="6" class="text-center text-muted">No ODC items found. Add some to get started.</td>
+                                                <td colspan="6" class="text-center text-muted">Click "Load All" to view ODC items</td>
                                             </tr>
                                         </tbody>
                                     </table>
