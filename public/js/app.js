@@ -564,12 +564,12 @@ class FinancialTracker {
                 const lines = csv.split('\n');
                 const headers = lines[0].split(',').map(h => h.trim());
                 
-                // Validate headers
-                const requiredHeaders = ['Employee_Name', 'Department', 'LCAT', 'Education_Level', 'Years_Experience', 'Priced_Salary', 'Current_Salary', 'Bill_Rate'];
+                // Validate headers - only Employee_Name is required
+                const requiredHeaders = ['Employee_Name'];
                 const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
                 
                 if (missingHeaders.length > 0) {
-                    this.showAlert('danger', `Missing required columns: ${missingHeaders.join(', ')}`);
+                    this.showAlert('danger', `Missing required column: ${missingHeaders.join(', ')}`);
                     return;
                 }
                 
@@ -582,7 +582,9 @@ class FinancialTracker {
                     if (!line) continue;
                     
                     const values = line.split(',').map(v => v.trim());
-                    if (values.length < requiredHeaders.length || !values[0]) {
+                    // Only check that Employee_Name (first column based on header) is not empty
+                    const nameIndex = headers.indexOf('Employee_Name');
+                    if (nameIndex === -1 || !values[nameIndex] || values[nameIndex].trim() === '') {
                         skippedCount++;
                         continue;
                     }
@@ -605,9 +607,6 @@ class FinancialTracker {
                                     break;
                                 case 'Education_Level':
                                     employee.education_level = value;
-                                    break;
-                                case 'Years_Experience':
-                                    employee.years_experience = parseInt(value) || 0;
                                     break;
                                 case 'Priced_Salary':
                                     employee.priced_salary = parseFloat(value) || 0;
@@ -716,14 +715,13 @@ class FinancialTracker {
         
         // Create header with monthly billing columns
         const baseHeaders = [
-            'Employee_Name', 'Department', 'Role', 'Status', 'LCAT', 'Education_Level', 'Years_Experience',
+            'Employee_Name', 'Department', 'Role', 'Status', 'LCAT', 'Education_Level',
             'Priced_Salary', 'Current_Salary', 'Bill_Rate', 
             'Start_Date', 'End_Date', 'Notes'
         ];
         
         const periodHeaders = [];
         periods.forEach(period => {
-            periodHeaders.push(`${period}_${currentYear}_Hours`);
             periodHeaders.push(`${period}_${currentYear}_Revenue`);
         });
         
@@ -732,23 +730,21 @@ class FinancialTracker {
         // Create sample rows
         const sampleRows = [
             [
-                'John Smith', 'Engineering', 'Solution Architect/Engineering Lead (SA/Eng Lead)', 
-                "Master's Degree", '8', '140000', '145000', '160', '95', '2023-01-15', '',
+                'John Smith', 'Engineering', 'Manager', 'Active', 'Solution Architect/Engineering Lead (SA/Eng Lead)', 
+                "Master's Degree", '140000', '145000', '95', '2023-01-15', '',
                 'Team lead for core platform', 
-                '165', '15675', '158', '15010', '172', '16340', '160', '15200',
-                '168', '15960', '155', '14725', '162', '15390', '170', '16150',
-                '160', '15200', '165', '15675', '158', '15010', '160', '15200'
+                '15675', '15010', '16340', '15200', '15960', '14725', '15390', '16150',
+                '15200', '15675', '15010', '15200'
             ],
             [
-                'Sarah Johnson', 'Data Science', 'AI Engineering Lead (AI Lead)', 
-                'PhD', '6', '130000', '135000', '160', '85', '2023-03-01', '',
+                'Sarah Johnson', 'SEAS IT', 'Employee', 'Active', 'AI Engineering Lead (AI Lead)', 
+                'PhD', '130000', '135000', '85', '2023-03-01', '',
                 'ML model development specialist',
-                '162', '13770', '155', '13175', '168', '14280', '160', '13600',
-                '164', '13940', '158', '13430', '165', '14025', '172', '14620',
-                '160', '13600', '162', '13770', '155', '13175', '160', '13600'
+                '13770', '13175', '14280', '13600', '13940', '13430', '14025', '14620',
+                '13600', '13770', '13175', '13600'
             ],
             // Empty template row
-            ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
+            ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
         ];
         
         const csvContent = [
