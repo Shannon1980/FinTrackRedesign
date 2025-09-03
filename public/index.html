@@ -731,6 +731,7 @@
                                 <select class="form-select" id="contractPeriod" onchange="loadContractCosts()">
                                     <option value="base-year">Base Year (3/12/2024 - 3/12/2025)</option>
                                     <option value="option-year-1">Option Year 1 (3/13/2025 - 3/12/2026)</option>
+                                    <option value="full-contract">Full Contract (Base + Option Year 1)</option>
                                     <option value="monthly">Monthly View</option>
                                 </select>
                             </div>
@@ -832,6 +833,35 @@
 
                         <!-- Detailed Breakdown -->
                         <div id="contractBreakdown" style="display: none;">
+                            <!-- Yearly Breakdown Table for Full Contract -->
+                            <div class="card mt-4" id="yearlyBreakdownCard" style="display: none;">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Contract Period Breakdown</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>Period</th>
+                                                    <th>Data Composition</th>
+                                                    <th>Direct Labor</th>
+                                                    <th>Subcontractor</th>
+                                                    <th>Indirect</th>
+                                                    <th>ODC</th>
+                                                    <th>Total Costs</th>
+                                                    <th>Revenue</th>
+                                                    <th>Profit</th>
+                                                    <th>Margin %</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="yearlyBreakdownTable">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Monthly Breakdown Table -->
                             <div class="card mt-4" id="monthlyBreakdownCard" style="display: none;">
                                 <div class="card-header">

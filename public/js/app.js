@@ -1760,11 +1760,21 @@ function displayContractCosts(data, period) {
     document.getElementById('costSummaryCards').style.display = 'block';
     document.getElementById('contractBreakdown').style.display = 'block';
     
+    // Handle yearly breakdown for full contract view
+    if (data.yearlyBreakdown && period === 'full-contract') {
+        displayYearlyBreakdown(data.yearlyBreakdown);
+        document.getElementById('yearlyBreakdownCard').style.display = 'block';
+        document.getElementById('monthlyBreakdownCard').style.display = 'block';
+        displayMonthlyBreakdown(data.monthlyBreakdown);
+    } else {
+        document.getElementById('yearlyBreakdownCard').style.display = 'none';
+    }
+    
     // Handle monthly breakdown for period views
     if (data.monthlyBreakdown && (period === 'base-year' || period === 'option-year-1')) {
         displayMonthlyBreakdown(data.monthlyBreakdown);
         document.getElementById('monthlyBreakdownCard').style.display = 'block';
-    } else {
+    } else if (period !== 'full-contract') {
         document.getElementById('monthlyBreakdownCard').style.display = 'none';
     }
     
@@ -1801,6 +1811,35 @@ function displayMonthlyBreakdown(monthlyData) {
                 <td>$${month.revenue.toLocaleString()}</td>
                 <td class="${profitClass}">$${month.profit.toLocaleString()}</td>
                 <td class="${marginClass}"><strong>${month.profitMargin}%</strong></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function displayYearlyBreakdown(yearlyData) {
+    const tbody = document.getElementById('yearlyBreakdownTable');
+    
+    tbody.innerHTML = yearlyData.map(year => {
+        const profitClass = year.profit >= 0 ? 'text-success' : 'text-danger';
+        const marginClass = parseFloat(year.profitMargin) >= 10 ? 'text-success' : 
+                           parseFloat(year.profitMargin) >= 5 ? 'text-warning' : 'text-danger';
+        
+        const dataComposition = year.actualMonths > 0 ? 
+            `${year.actualMonths} actual, ${year.projectedMonths} projected` : 
+            'All projected';
+        
+        return `
+            <tr>
+                <td><strong>${year.year}</strong><br><small>${year.period}</small></td>
+                <td><span class="badge ${year.actualMonths > 0 ? 'bg-info' : 'bg-warning'}">${dataComposition}</span></td>
+                <td>$${year.directLaborCost.toLocaleString()}</td>
+                <td>$${year.subcontractorLaborCost.toLocaleString()}</td>
+                <td>$${year.totalIndirectCosts.toLocaleString()}</td>
+                <td>$${year.totalOdcCosts.toLocaleString()}</td>
+                <td><strong>$${year.totalContractCosts.toLocaleString()}</strong></td>
+                <td>$${year.totalRevenue.toLocaleString()}</td>
+                <td class="${profitClass}">$${year.profit.toLocaleString()}</td>
+                <td class="${marginClass}"><strong>${year.profitMargin}%</strong></td>
             </tr>
         `;
     }).join('');

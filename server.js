@@ -933,6 +933,73 @@ function generateDemoContractCosts(period, year, month) {
             dataComposition: actualMonths > 0 ? `${actualMonths} actual, ${projectedMonths} projected months` : 'All projected months',
             monthlyBreakdown: generateMonthlyBreakdown('2025-03', '2026-03', currentDate)
         };
+    } else if (period === 'full-contract') {
+        const baseYearData = generateDemoContractCosts('base-year', year, month);
+        const optionYear1Data = generateDemoContractCosts('option-year-1', year, month);
+        
+        const totalActualMonths = baseYearData.actualMonths + optionYear1Data.actualMonths;
+        const totalProjectedMonths = baseYearData.projectedMonths + optionYear1Data.projectedMonths;
+        const totalDirectLabor = baseYearData.directLaborCost + optionYear1Data.directLaborCost;
+        const totalSubcontractor = baseYearData.subcontractorLaborCost + optionYear1Data.subcontractorLaborCost;
+        const totalIndirect = baseYearData.totalIndirectCosts + optionYear1Data.totalIndirectCosts;
+        const totalOdc = baseYearData.totalOdcCosts + optionYear1Data.totalOdcCosts;
+        const totalCosts = baseYearData.totalContractCosts + optionYear1Data.totalContractCosts;
+        const totalRevenue = baseYearData.totalRevenue + optionYear1Data.totalRevenue;
+        const totalProfit = totalRevenue - totalCosts;
+        const overallProfitMargin = (totalProfit / totalRevenue) * 100;
+        
+        // Combine monthly breakdowns
+        const combinedBreakdown = [
+            ...baseYearData.monthlyBreakdown,
+            ...optionYear1Data.monthlyBreakdown
+        ];
+        
+        return {
+            period: '2024-03-12 to 2026-03-12',
+            periodName: 'Full Contract (24 months)',
+            directLaborCost: totalDirectLabor,
+            subcontractorLaborCost: totalSubcontractor,
+            totalIndirectCosts: totalIndirect,
+            totalOdcCosts: totalOdc,
+            totalContractCosts: totalCosts,
+            totalRevenue: totalRevenue,
+            profit: totalProfit,
+            profitMargin: overallProfitMargin.toFixed(2),
+            actualMonths: totalActualMonths,
+            projectedMonths: totalProjectedMonths,
+            dataComposition: `${totalActualMonths} actual, ${totalProjectedMonths} projected months (24 total)`,
+            monthlyBreakdown: combinedBreakdown,
+            yearlyBreakdown: [
+                {
+                    year: 'Base Year',
+                    period: '2024-03-12 to 2025-03-12',
+                    directLaborCost: baseYearData.directLaborCost,
+                    subcontractorLaborCost: baseYearData.subcontractorLaborCost,
+                    totalIndirectCosts: baseYearData.totalIndirectCosts,
+                    totalOdcCosts: baseYearData.totalOdcCosts,
+                    totalContractCosts: baseYearData.totalContractCosts,
+                    totalRevenue: baseYearData.totalRevenue,
+                    profit: baseYearData.profit,
+                    profitMargin: baseYearData.profitMargin,
+                    actualMonths: baseYearData.actualMonths,
+                    projectedMonths: baseYearData.projectedMonths
+                },
+                {
+                    year: 'Option Year 1',
+                    period: '2025-03-13 to 2026-03-12',
+                    directLaborCost: optionYear1Data.directLaborCost,
+                    subcontractorLaborCost: optionYear1Data.subcontractorLaborCost,
+                    totalIndirectCosts: optionYear1Data.totalIndirectCosts,
+                    totalOdcCosts: optionYear1Data.totalOdcCosts,
+                    totalContractCosts: optionYear1Data.totalContractCosts,
+                    totalRevenue: optionYear1Data.totalRevenue,
+                    profit: optionYear1Data.profit,
+                    profitMargin: optionYear1Data.profitMargin,
+                    actualMonths: optionYear1Data.actualMonths,
+                    projectedMonths: optionYear1Data.projectedMonths
+                }
+            ]
+        };
     }
 }
 
