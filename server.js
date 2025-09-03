@@ -1027,7 +1027,7 @@ app.post('/api/import/indirect-costs', authMiddleware, upload.single('file'), as
         }
 
         const csvText = req.file.buffer.toString();
-        const records = Papa.parse(csvText, {
+        const records = papa.parse(csvText, {
             header: true,
             skipEmptyLines: true,
             transformHeader: (header) => header.trim()
@@ -1110,7 +1110,7 @@ app.post('/api/import/odc-items', authMiddleware, upload.single('file'), async (
         }
 
         const csvText = req.file.buffer.toString();
-        const records = Papa.parse(csvText, {
+        const records = papa.parse(csvText, {
             header: true,
             skipEmptyLines: true,
             transformHeader: (header) => header.trim()
