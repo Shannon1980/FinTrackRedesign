@@ -764,13 +764,12 @@ class FinancialTracker {
     }
 
     downloadIndirectCostTemplate() {
-        // Use the template data from the static CSV file
+        // Use the template format with monthly columns as shown in the attached file
         const csvContent = [
-            'Month,Fringe_Amount,Overhead_Amount,GA_Amount,Profit_Amount,Notes',
-            '2025-01,7500.00,12000.00,2500.00,1500.00,Monthly indirect costs for January 2025',
-            '2025-02,7800.00,12200.00,2600.00,1600.00,Monthly indirect costs for February 2025',
-            '2025-03,7500.00,12000.00,2500.00,1500.00,Monthly indirect costs for March 2025',
-            ',,,,,',
+            'Month,2024_03,2025_04',
+            'Fringe_Amount,23453.6639,40138.44955',
+            'Overhead_Amount,22937.75109,39255.51969',
+            'GA_Amount,48827.13512,87582.27148',
         ].join('\n');
 
         const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -1079,10 +1078,13 @@ async function loadBillingPeriod() {
     
     try {
         // Get billing period information
-        const response = await fetch(`/api/billing-period/${year}/${month}`, {
-            headers: {
-                'Authorization': `Bearer ${app.authToken}`
-            }
+        const headers = {};
+        if (app.authToken) {
+            headers['Authorization'] = `Bearer ${app.authToken}`;
+        }
+        
+        const response = await fetch(`/api/billing-period/${year}/${period}`, {
+            headers: headers
         });
         
         if (response.ok) {
@@ -1100,7 +1102,7 @@ async function loadBillingPeriod() {
             document.getElementById('billingPeriodInfo').style.display = 'block';
             
             // Load billing summary
-            await loadBillingSummary(year, month);
+            await loadBillingSummary(year, period);
         } else {
             app.showAlert('warning', 'Failed to load billing period information');
         }
@@ -1112,10 +1114,13 @@ async function loadBillingPeriod() {
 
 async function loadBillingSummary(year, month) {
     try {
+        const headers = {};
+        if (app.authToken) {
+            headers['Authorization'] = `Bearer ${app.authToken}`;
+        }
+        
         const response = await fetch(`/api/monthly-billing-summary/${year}/${month}`, {
-            headers: {
-                'Authorization': `Bearer ${app.authToken}`
-            }
+            headers: headers
         });
         
         if (response.ok) {
