@@ -71,100 +71,83 @@
         <!-- Alert Messages -->
         <div id="alertContainer"></div>
 
-        <!-- Summary Cards -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card metric-card text-center p-3">
-                    <h6 class="card-title mb-1">Team Size</h6>
-                    <h3 id="teamSize">0</h3>
-                    <small>Active Employees</small>
+        <!-- Key Metrics Dashboard -->
+        <div class="row mb-3">
+            <div class="col-md-2">
+                <div class="card metric-card text-center p-2">
+                    <h6 class="card-title mb-1">Team</h6>
+                    <h4 id="teamSize">0</h4>
+                    <small>Active</small>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card metric-card text-center p-3">
-                    <h6 class="card-title mb-1">Total Salary</h6>
-                    <h3 id="totalSalary">$0</h3>
-                    <small>Annual Current</small>
+            <div class="col-md-2">
+                <div class="card metric-card text-center p-2">
+                    <h6 class="card-title mb-1">Revenue</h6>
+                    <h4 id="totalRevenue">$0</h4>
+                    <small>Monthly</small>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card metric-card text-center p-3">
-                    <h6 class="card-title mb-1">Monthly Hours</h6>
-                    <h3 id="totalHours">0</h3>
-                    <small>Total Planned</small>
+            <div class="col-md-2">
+                <div class="card metric-card text-center p-2">
+                    <h6 class="card-title mb-1">Costs</h6>
+                    <h4 id="totalCosts">$0</h4>
+                    <small>Monthly</small>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card metric-card text-center p-3">
-                    <h6 class="card-title mb-1">Cost Variance</h6>
-                    <h3 id="costVariance">$0</h3>
-                    <small>vs Priced</small>
+            <div class="col-md-2">
+                <div class="card metric-card text-center p-2">
+                    <h6 class="card-title mb-1">Margin</h6>
+                    <h4 id="profitMargin">0%</h4>
+                    <small>Profit</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card metric-card text-center p-2">
+                    <h6 class="card-title mb-1">Hours</h6>
+                    <h4 id="totalHours">0</h4>
+                    <small>Monthly</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card metric-card text-center p-2">
+                    <h6 class="card-title mb-1">Variance</h6>
+                    <h4 id="costVariance">$0</h4>
+                    <small>vs Budget</small>
                 </div>
             </div>
         </div>
 
-        <!-- Profit/Loss Summary Cards -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card text-center p-3" id="profitLossCard">
-                    <h6 class="card-title mb-1">Profit/Loss</h6>
-                    <h3 id="profitLoss">$0</h3>
-                    <small>Current Month</small>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card metric-card text-center p-3">
-                    <h6 class="card-title mb-1">Total Revenue</h6>
-                    <h3 id="totalRevenue">$0</h3>
-                    <small>Monthly</small>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card metric-card text-center p-3">
-                    <h6 class="card-title mb-1">Total Costs</h6>
-                    <h3 id="totalCosts">$0</h3>
-                    <small>Monthly</small>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card metric-card text-center p-3">
-                    <h6 class="card-title mb-1">Profit Margin</h6>
-                    <h3 id="profitMargin">0%</h3>
-                    <small>Current Month</small>
-                </div>
-            </div>
-        </div>
 
-        <!-- Tabs -->
-        <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
+        <!-- Main Navigation -->
+        <ul class="nav nav-tabs mb-3" id="mainTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="team-tab" data-bs-toggle="tab" data-bs-target="#team" type="button">
-                    <i class="fas fa-users me-1"></i> Team Management
+                    <i class="fas fa-users me-1"></i> Team
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="billing-tab" data-bs-toggle="tab" data-bs-target="#billing" type="button">
-                    <i class="fas fa-calendar-alt me-1"></i> Monthly Billing
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="projections-tab" data-bs-toggle="tab" data-bs-target="#projections" type="button">
-                    <i class="fas fa-chart-line me-1"></i> Financial Projections
+                    <i class="fas fa-calendar-alt me-1"></i> Billing
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="contract-costs-tab" data-bs-toggle="tab" data-bs-target="#contract-costs" type="button">
-                    <i class="fas fa-calculator me-1"></i> Contract Costs
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button">
-                    <i class="fas fa-analytics me-1"></i> Analytics
+                    <i class="fas fa-calculator me-1"></i> Costs
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="contract-analysis-tab" data-bs-toggle="tab" data-bs-target="#contract-analysis" type="button">
-                    <i class="fas fa-file-contract me-1"></i> Contract Analysis
+                    <i class="fas fa-file-contract me-1"></i> Analysis
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="projections-tab" data-bs-toggle="tab" data-bs-target="#projections" type="button">
+                    <i class="fas fa-chart-line me-1"></i> Projections
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button">
+                    <i class="fas fa-chart-bar me-1"></i> Reports
                 </button>
             </li>
         </ul>
@@ -194,15 +177,9 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <!-- Template Instructions -->
-                        <div class="alert alert-info mb-3">
-                            <h6><i class="fas fa-info-circle me-1"></i> Employee Template Instructions</h6>
-                            <strong>Required Field:</strong> Employee_Name<br>
-                            <strong>Optional Fields:</strong> Department, Role, Status, LCAT, Education_Level, Priced_Salary, Current_Salary, Bill_Rate, Start_Date, End_Date, Notes<br>
-                            <strong>Department Options:</strong> Engineering, Data Science, Product Management, Operations, SEAS IT<br>
-                            <strong>Role Options:</strong> Employee, Manager<br>
-                            <strong>Status Options:</strong> Active, Inactive<br>
-                            <strong>Education Options:</strong> High School, Bachelor's Degree, Master's Degree, PhD
+                        <!-- Quick Help -->
+                        <div class="alert alert-light border-0 py-2 mb-3">
+                            <small><i class="fas fa-info-circle me-1"></i> <strong>Quick Start:</strong> Download template, add employees, then import CSV file</small>
                         </div>
                         
                         <!-- Filters -->
@@ -773,59 +750,53 @@
                             <span id="dataTypeText">Loading...</span>
                         </div>
 
-                        <!-- Cost Summary Cards -->
-                        <div class="row mb-4" id="costSummaryCards" style="display: none;">
+                        <!-- Analysis Results -->
+                        <div class="row mb-3" id="costSummaryCards" style="display: none;">
                             <div class="col-md-2">
                                 <div class="card bg-primary text-white">
-                                    <div class="card-body text-center">
-                                        <h4 id="directLaborTotal">$0</h4>
-                                        <p class="mb-0">Direct Labor</p>
-                                        <small id="directLaborSubtext">Employee costs</small>
+                                    <div class="card-body text-center p-2">
+                                        <h5 id="directLaborTotal">$0</h5>
+                                        <small>Direct Labor</small>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-2">
                                 <div class="card bg-info text-white">
-                                    <div class="card-body text-center">
-                                        <h4 id="subcontractorLaborTotal">$0</h4>
-                                        <p class="mb-0">Subcontractor</p>
-                                        <small id="subcontractorLaborSubtext">External costs</small>
+                                    <div class="card-body text-center p-2">
+                                        <h5 id="subcontractorLaborTotal">$0</h5>
+                                        <small>Subcontractor</small>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-2">
                                 <div class="card bg-warning text-white">
-                                    <div class="card-body text-center">
-                                        <h4 id="totalIndirectTotal">$0</h4>
-                                        <p class="mb-0">Indirect</p>
-                                        <small id="indirectSubtext">Fringe + OH + G&A</small>
+                                    <div class="card-body text-center p-2">
+                                        <h5 id="totalIndirectTotal">$0</h5>
+                                        <small>Indirect</small>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-2">
                                 <div class="card bg-secondary text-white">
-                                    <div class="card-body text-center">
-                                        <h4 id="totalRevenueTotal">$0</h4>
-                                        <p class="mb-0">Revenue</p>
-                                        <small id="revenueSubtext">Total billing</small>
+                                    <div class="card-body text-center p-2">
+                                        <h5 id="totalRevenueTotal">$0</h5>
+                                        <small>Revenue</small>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-2">
                                 <div class="card bg-success text-white">
-                                    <div class="card-body text-center">
-                                        <h4 id="totalContractTotal">$0</h4>
-                                        <p class="mb-0">Total Costs</p>
-                                        <small id="contractSubtext">All costs + ODC</small>
+                                    <div class="card-body text-center p-2">
+                                        <h5 id="totalContractTotal">$0</h5>
+                                        <small>Total Costs</small>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-2">
                                 <div class="card text-white" id="profitMarginCard">
-                                    <div class="card-body text-center">
-                                        <h4 id="profitMarginTotal">0%</h4>
-                                        <p class="mb-0">Profit Margin</p>
-                                        <small id="profitSubtext">$0 profit</small>
+                                    <div class="card-body text-center p-2">
+                                        <h5 id="profitMarginTotal">0%</h5>
+                                        <small>Profit Margin</small>
                                     </div>
                                 </div>
                             </div>

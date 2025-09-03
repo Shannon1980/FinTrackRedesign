@@ -1870,6 +1870,15 @@ function displayLaborBreakdown(breakdown) {
     `).join('');
 }
 
+// Helper function to clear filters
+function clearFilters() {
+    document.getElementById('nameSearch').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('departmentFilter').value = '';
+    document.getElementById('roleFilter').value = '';
+    filterEmployees();
+}
+
 // Initialize contract period onChange handler
 document.addEventListener('DOMContentLoaded', function() {
     const contractPeriod = document.getElementById('contractPeriod');
