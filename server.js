@@ -419,31 +419,23 @@ app.get('/api/validation-options', async (req, res) => {
                 lcats: lcatResult.rows.map(row => row.lcat)
             });
         } catch (dbError) {
-            // If database query fails, return demo data
-            return res.json({
-                departments: ['Engineering', 'Data Science', 'Product Management', 'Operations', 'SEAS IT'],
-                lcats: [
-                    'Program Manager (PM)',
-                    'Solution Architect/Engineering Lead (SA/Eng Lead)',
-                    'AI Engineering Lead (AI Lead)',
-                    'Senior Software Engineer (Sr. SWE)',
-                    'Software Engineer (SWE)',
-                    'Junior Software Engineer (Jr. SWE)'
-                ],
-                education_levels: ['High School', "Bachelor's Degree", "Master's Degree", 'PhD'],
-                roles: ['Employee', 'Manager'],
-                statuses: ['Active', 'Inactive']
-            });
+            console.error('Database error, using demo data:', dbError);
         }
         
-        const departments = await Employee.distinct('department');
-        const lcats = await Employee.distinct('lcat');
-        const educationLevels = await Employee.distinct('education_level');
-        
-        res.json({
-            departments: departments.sort(),
-            lcats: lcats.sort(),
-            education_levels: educationLevels.sort()
+        // Always return demo data for now since employees table is empty
+        return res.json({
+            departments: ['Engineering', 'Data Science', 'Product Management', 'Operations', 'SEAS IT'],
+            lcats: [
+                'Program Manager (PM)',
+                'Solution Architect/Engineering Lead (SA/Eng Lead)',
+                'AI Engineering Lead (AI Lead)',
+                'Senior Software Engineer (Sr. SWE)',
+                'Software Engineer (SWE)',
+                'Junior Software Engineer (Jr. SWE)'
+            ],
+            education_levels: ['High School', "Bachelor's Degree", "Master's Degree", 'PhD'],
+            roles: ['Employee', 'Manager'],
+            statuses: ['Active', 'Inactive']
         });
     } catch (error) {
         console.error('Error fetching validation options:', error);
