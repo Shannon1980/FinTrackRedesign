@@ -594,6 +594,11 @@ class FinancialTracker {
                         if (index < values.length) {
                             const value = values[index];
                             
+                            // Debug logging for Current_Salary and Bill_Rate
+                            if (header === 'Current_Salary' || header === 'Bill_Rate') {
+                                console.log(`Processing ${header}: "${value}" -> ${parseFloat(value) || 0}`);
+                            }
+                            
                             // Map CSV headers to employee object
                             switch (header) {
                                 case 'Employee_Name':
@@ -658,6 +663,13 @@ class FinancialTracker {
                     // Add unique ID
                     employee._id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
                     
+                    // Debug: Log the complete employee object
+                    console.log('Final employee object:', {
+                        name: employee.employee_name,
+                        current_salary: employee.current_salary,
+                        bill_rate: employee.bill_rate
+                    });
+                    
                     newEmployees.push(employee);
                     importedCount++;
                 }
@@ -681,13 +693,12 @@ class FinancialTracker {
 
     exportCSV() {
         const csvContent = [
-            'Employee_Name,Department,LCAT,Education_Level,Years_Experience,Priced_Salary,Current_Salary,Bill_Rate,Start_Date,End_Date,Notes',
+            'Employee_Name,Department,LCAT,Education_Level,Priced_Salary,Current_Salary,Bill_Rate,Start_Date,End_Date,Notes',
             ...this.employees.map(emp => [
                 emp.employee_name,
                 emp.department,
                 emp.lcat,
                 emp.education_level,
-                emp.years_experience,
                 emp.priced_salary,
                 emp.current_salary,
                 emp.bill_rate || 0,
