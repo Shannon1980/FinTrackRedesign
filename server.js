@@ -493,8 +493,18 @@ app.post('/api/auth/login', async (req, res) => {
 
 // Utility functions for billing periods
 function getMonthlyBillingPeriod(year, month) {
+    // Validate input parameters
+    if (!year || !month || month < 1 || month > 12) {
+        throw new Error(`Invalid year or month: year=${year}, month=${month}`);
+    }
+    
     // Billing period starts on 12th of month unless it's a weekend
     let startDate = new Date(year, month - 1, 12); // month is 1-indexed
+    
+    // Validate the created date
+    if (isNaN(startDate.getTime())) {
+        throw new Error(`Invalid start date created: year=${year}, month=${month}`);
+    }
     
     // If 12th is Saturday (6) or Sunday (0), move to next Monday
     const dayOfWeek = startDate.getDay();
@@ -506,6 +516,12 @@ function getMonthlyBillingPeriod(year, month) {
     
     // End date is 11th of next month (or previous working day)
     let endDate = new Date(year, month, 11); // Next month's 11th
+    
+    // Validate the end date
+    if (isNaN(endDate.getTime())) {
+        throw new Error(`Invalid end date created: year=${year}, month=${month}`);
+    }
+    
     const endDayOfWeek = endDate.getDay();
     if (endDayOfWeek === 6) { // Saturday
         endDate.setDate(endDate.getDate() - 1); // Move to Friday
@@ -580,18 +596,65 @@ function calculateWorkingDays(startDate, endDate) {
     return workingDays;
 }
 
-// GET /api/billing-period/:year/:month - Get billing period info
-app.get('/api/billing-period/:year/:month', authMiddleware, async (req, res) => {
+// Function to convert period name to month number
+function periodToMonth(period) {
+    const periodMap = {
+        'JAN-FEB': 1,
+        'FEB-MAR': 2,
+        'MAR-APR': 3,
+        'APR-MAY': 4,
+        'MAY-JUN': 5,
+        'JUN-JUL': 6,
+        'JUL-AUG': 7,
+        'AUG-SEP': 8,
+        'SEP-OCT': 9,
+        'OCT-NOV': 10,
+        'NOV-DEC': 11,
+        'DEC-JAN': 12
+    };
+    return periodMap[period] || null;
+}
+
+// GET /api/billing-period/:year/:period - Get billing period info
+app.get('/api/billing-period/:year/:period', authMiddleware, async (req, res) => {
     try {
         const year = parseInt(req.params.year);
-        const month = parseInt(req.params.month);
+        const periodParam = req.params.period;
+        
+        // Convert period to month number
+        let month;
+        if (isNaN(parseInt(periodParam))) {
+            // It's a period name like "JAN-FEB"
+            month = periodToMonth(periodParam);
+            if (!month) {
+                return res.status(400).json({ 
+                    message: 'Invalid period name',
+                    period: periodParam,
+                    validPeriods: ['JAN-FEB', 'FEB-MAR', 'MAR-APR', 'APR-MAY', 'MAY-JUN', 'JUN-JUL', 'JUL-AUG', 'AUG-SEP', 'SEP-OCT', 'OCT-NOV', 'NOV-DEC', 'DEC-JAN']
+                });
+            }
+        } else {
+            // It's a numeric month
+            month = parseInt(periodParam);
+        }
+        
+        // Validate input parameters
+        if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
+            return res.status(400).json({ 
+                message: 'Invalid year or month parameters',
+                year: req.params.year,
+                period: periodParam,
+                month: month
+            });
+        }
         
         const { startDate, endDate } = getMonthlyBillingPeriod(year, month);
         const workingDays = calculateWorkingDays(startDate, endDate);
         const maxHours = workingDays * 8; // 8 hours per working day
         
         res.json({
-            period: `${year}-${month.toString().padStart(2, '0')}`,
+            period: periodParam,
+            month: month,
             startDate: startDate.toISOString().split('T')[0],
             endDate: endDate.toISOString().split('T')[0],
             workingDays,
