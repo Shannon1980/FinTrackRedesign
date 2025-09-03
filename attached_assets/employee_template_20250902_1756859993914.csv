@@ -1,0 +1,6 @@
+employee_name,labor_category,department,status,salary,start_date,location,manager,skills,notes
+John Smith,Senior Engineer,Engineering,Active,95000,2024-01-15,New York,Alice Brown,"Python, React, AWS",Lead developer for main product
+Sarah Johnson,Project Manager,Operations,Active,85000,2024-02-01,Remote,David Lee,"Project Management, Agile, Scrum",PMP certified
+Mike Chen,Junior Engineer,Engineering,Active,65000,2024-03-01,San Francisco,John Smith,"JavaScript, Node.js, MongoDB","Recent graduate, high potential"
+Emily Davis,Consultant,Finance,Contractor,80000,2024-01-10,Remote,Sarah Johnson,"Financial Analysis, Excel, PowerBI",Specializes in cost analysis
+Robert Wilson,Contractor,Marketing,Part-time,50000,2024-04-15,Chicago,Emily Davis,"Digital Marketing, SEO, Analytics",Part-time social media specialist

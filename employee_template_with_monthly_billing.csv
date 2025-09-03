@@ -1,5 +1,5 @@
-Employee_Name,Department,Role,Status,LCAT,Education_Level,Years_Experience,Priced_Salary,Current_Salary,Bill_Rate,Start_Date,End_Date,Notes,JAN_FEB_2024_Revenue,FEB_MAR_2024_Revenue,MAR_APR_2024_Revenue,APR_MAY_2024_Revenue,MAY_JUN_2024_Revenue,JUN_JUL_2024_Revenue,JUL_AUG_2024_Revenue,AUG_SEP_2024_Revenue,SEP_OCT_2024_Revenue,OCT_NOV_2024_Revenue,NOV_DEC_2024_Revenue,DEC_JAN_2024_Revenue
-John Smith,Engineering,Manager,Active,Solution Architect/Engineering Lead (SA/Eng Lead),Master's Degree,8,140000,145000,95,2023-01-15,,Team lead for core platform,15675,15010,16340,15200,15960,14725,15390,16150,15200,15675,15010,15200
-Sarah Johnson,SEAS IT,Employee,Active,AI Engineering Lead (AI Lead),PhD,6,130000,135000,85,2023-03-01,,ML model development specialist,13770,13175,14280,13600,13940,13430,14025,14620,13600,13770,13175,13600
-Mike Wilson,Engineering,Employee,Active,Senior Software Engineer (Sr. SWE),Bachelor's Degree,5,110000,115000,75,2023-06-01,,Full-stack development,11850,12000,12375,12150,12600,11625,12000,12750,12000,11850,12000,12000
-,,,,,,,,,,,,,,,,,,,,,,,,
+Employee_Name,Department,Role,Status,LCAT,Education_Level,Priced_Salary,Current_Salary,Bill_Rate,Start_Date,End_Date,Notes,JAN_FEB_2024_Revenue,FEB_MAR_2024_Revenue,MAR_APR_2024_Revenue,APR_MAY_2024_Revenue,MAY_JUN_2024_Revenue,JUN_JUL_2024_Revenue,JUL_AUG_2024_Revenue,AUG_SEP_2024_Revenue,SEP_OCT_2024_Revenue,OCT_NOV_2024_Revenue,NOV_DEC_2024_Revenue,DEC_JAN_2024_Revenue
+John Smith,Engineering,Manager,Active,Solution Architect/Engineering Lead (SA/Eng Lead),Master's Degree,140000,145000,95,2023-01-15,,Team lead for core platform,15675,15010,16340,15200,15960,14725,15390,16150,15200,15675,15010,15200
+Sarah Johnson,SEAS IT,Employee,Active,AI Engineering Lead (AI Lead),PhD,130000,135000,85,2023-03-01,,ML model development specialist,13770,13175,14280,13600,13940,13430,14025,14620,13600,13770,13175,13600
+Mike Wilson,Engineering,Employee,Active,Senior Software Engineer (Sr. SWE),Bachelor's Degree,110000,115000,75,2023-06-01,,Full-stack development,11850,12000,12375,12150,12600,11625,12000,12750,12000,11850,12000,12000
+,,,,,,,,,,,,,,,,,,,,,,
