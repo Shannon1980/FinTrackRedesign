@@ -117,9 +117,8 @@ const employeeSchema = new mongoose.Schema({
 employeeSchema.pre('save', function(next) {
     // Generate unique employee ID if not exists
     if (!this.employee_id) {
-        const timestamp = Date.now().toString(36);
-        const random = Math.random().toString(36).substr(2, 5);
-        this.employee_id = `EMP-${timestamp}-${random}`.toUpperCase();
+        // Generate 5-digit random number between 10000 and 99999
+        this.employee_id = Math.floor(Math.random() * 90000 + 10000).toString();
     }
     
     // Calculate hourly rate
