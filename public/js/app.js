@@ -481,24 +481,43 @@ class FinancialTracker {
     clearEmployeeForm() {
         document.getElementById('employeeForm').reset();
         const today = new Date().toISOString().split('T')[0];
-        document.getElementById('employeeStartDate').value = today;
-        document.getElementById('employeeBillRate').value = '';
+        const startDateEl = document.getElementById('employeeStartDate');
+        const billRateEl = document.getElementById('employeeBillRate');
+        
+        if (startDateEl) startDateEl.value = today;
+        if (billRateEl) billRateEl.value = '';
     }
 
     populateEmployeeForm(employee) {
-        document.getElementById('employeeName').value = employee.employee_name || '';
-        document.getElementById('employeeDepartment').value = employee.department || '';
-        document.getElementById('employeeLCAT').value = employee.lcat || '';
-        document.getElementById('employeeEducation').value = employee.education_level || '';
-        document.getElementById('employeeExperience').value = employee.years_experience || 0;
-        document.getElementById('employeePricedSalary').value = employee.priced_salary || 0;
-        document.getElementById('employeeCurrentSalary').value = employee.current_salary || 0;
-        document.getElementById('employeeBillRate').value = employee.bill_rate || 0;
-        document.getElementById('employeeStartDate').value = employee.start_date ? employee.start_date.split('T')[0] : '';
-        document.getElementById('employeeEndDate').value = employee.end_date ? employee.end_date.split('T')[0] : '';
-        document.getElementById('employeeNotes').value = employee.notes || '';
-        document.getElementById('employeeType').value = employee.employee_type || '';
-        document.getElementById('subcontractorCompany').value = employee.subcontractor_company || '';
+        const elements = {
+            employeeName: document.getElementById('employeeName'),
+            employeeDepartment: document.getElementById('employeeDepartment'),
+            employeeLCAT: document.getElementById('employeeLCAT'),
+            employeeEducation: document.getElementById('employeeEducation'),
+            employeeExperience: document.getElementById('employeeExperience'),
+            employeePricedSalary: document.getElementById('employeePricedSalary'),
+            employeeCurrentSalary: document.getElementById('employeeCurrentSalary'),
+            employeeBillRate: document.getElementById('employeeBillRate'),
+            employeeStartDate: document.getElementById('employeeStartDate'),
+            employeeEndDate: document.getElementById('employeeEndDate'),
+            employeeNotes: document.getElementById('employeeNotes'),
+            employeeType: document.getElementById('employeeType'),
+            subcontractorCompany: document.getElementById('subcontractorCompany')
+        };
+        
+        if (elements.employeeName) elements.employeeName.value = employee.employee_name || '';
+        if (elements.employeeDepartment) elements.employeeDepartment.value = employee.department || '';
+        if (elements.employeeLCAT) elements.employeeLCAT.value = employee.lcat || '';
+        if (elements.employeeEducation) elements.employeeEducation.value = employee.education_level || '';
+        if (elements.employeeExperience) elements.employeeExperience.value = employee.years_experience || 0;
+        if (elements.employeePricedSalary) elements.employeePricedSalary.value = employee.priced_salary || 0;
+        if (elements.employeeCurrentSalary) elements.employeeCurrentSalary.value = employee.current_salary || 0;
+        if (elements.employeeBillRate) elements.employeeBillRate.value = employee.bill_rate || 0;
+        if (elements.employeeStartDate) elements.employeeStartDate.value = employee.start_date ? employee.start_date.split('T')[0] : '';
+        if (elements.employeeEndDate) elements.employeeEndDate.value = employee.end_date ? employee.end_date.split('T')[0] : '';
+        if (elements.employeeNotes) elements.employeeNotes.value = employee.notes || '';
+        if (elements.employeeType) elements.employeeType.value = employee.employee_type || '';
+        if (elements.subcontractorCompany) elements.subcontractorCompany.value = employee.subcontractor_company || '';
         
         // Show/hide subcontractor field based on employee type
         toggleSubcontractorField();
@@ -1908,11 +1927,14 @@ function showAddOdcModal() {
     // Set current month as default
     const now = new Date();
     const currentMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
-    document.getElementById('odcMonth').value = currentMonth;
+    const odcMonthEl = document.getElementById('odcMonth');
+    const odcFormEl = document.getElementById('odcForm');
+    
+    if (odcMonthEl) odcMonthEl.value = currentMonth;
     
     // Clear form
-    document.getElementById('odcForm').reset();
-    document.getElementById('odcMonth').value = currentMonth;
+    if (odcFormEl) odcFormEl.reset();
+    if (odcMonthEl) odcMonthEl.value = currentMonth;
     
     new bootstrap.Modal(document.getElementById('odcModal')).show();
 }
@@ -2050,12 +2072,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set current year and month as default
     const now = new Date();
-    document.getElementById('billingYear').value = now.getFullYear();
-    document.getElementById('billingPeriod').value = 'JAN-FEB';
+    const billingYearEl = document.getElementById('billingYear');
+    const billingPeriodEl = document.getElementById('billingPeriod');
+    
+    if (billingYearEl) billingYearEl.value = now.getFullYear();
+    if (billingPeriodEl) billingPeriodEl.value = 'JAN-FEB';
     
     // Set defaults for contract costs
     const currentMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
-    document.getElementById('indirectCostMonth').value = currentMonth;
-    document.getElementById('costSummaryYear').value = now.getFullYear();
-    document.getElementById('costSummaryMonth').value = now.getMonth() + 1;
+    const indirectCostMonthEl = document.getElementById('indirectCostMonth');
+    const costSummaryYearEl = document.getElementById('costSummaryYear');
+    const costSummaryMonthEl = document.getElementById('costSummaryMonth');
+    
+    if (indirectCostMonthEl) indirectCostMonthEl.value = currentMonth;
+    if (costSummaryYearEl) costSummaryYearEl.value = now.getFullYear();
+    if (costSummaryMonthEl) costSummaryMonthEl.value = now.getMonth() + 1;
 });
