@@ -292,10 +292,24 @@ app.post('/api/import/consolidated', authMiddleware, upload.single('file'), asyn
         }
         
         const csvData = req.file.buffer.toString('utf8');
-        const parsed = papa.parse(csvData, { header: true, skipEmptyLines: true });
+        const parsed = papa.parse(csvData, { 
+            header: true, 
+            skipEmptyLines: true,
+            transformHeader: (header) => header.trim(),
+            transform: (value) => value.trim()
+        });
         
         if (parsed.errors.length > 0) {
-            return res.status(400).json({ message: 'CSV parse error', errors: parsed.errors });
+            console.error('CSV parsing errors:', parsed.errors);
+            return res.status(400).json({ 
+                message: 'CSV parse error - please check your file format', 
+                errors: parsed.errors.map(err => ({
+                    row: err.row,
+                    type: err.type,
+                    code: err.code,
+                    message: err.message
+                }))
+            });
         }
         
         const results = {
@@ -306,6 +320,12 @@ app.post('/api/import/consolidated', authMiddleware, upload.single('file'), asyn
         };
         
         const processedIndirectCosts = new Set(); // Track processed indirect cost months
+        
+        console.log('Parsed CSV data:', {
+            dataLength: parsed.data.length,
+            headers: Object.keys(parsed.data[0] || {}),
+            firstRow: parsed.data[0]
+        });
         
         for (let i = 0; i < parsed.data.length; i++) {
             const row = parsed.data[i];
