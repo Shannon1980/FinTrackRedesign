@@ -408,28 +408,9 @@ app.post('/api/projections', authMiddleware, async (req, res) => {
 // GET /api/validation-options - Get validation options for dropdowns
 app.get('/api/validation-options', async (req, res) => {
     try {
-        // Try to get validation data from PostgreSQL
-        try {
-            // Get unique values from employees table
-            const deptResult = await db.query('SELECT DISTINCT department FROM employees WHERE department IS NOT NULL');
-            const lcatResult = await db.query('SELECT DISTINCT lcat FROM employees WHERE lcat IS NOT NULL');
-            
-            // If we have data from database, use it
-            if (deptResult.rows.length > 0 || lcatResult.rows.length > 0) {
-                return res.json({
-                    departments: deptResult.rows.map(row => row.department),
-                    lcats: lcatResult.rows.map(row => row.lcat),
-                    education_levels: ['High School', "Bachelor's Degree", "Master's Degree", 'PhD'],
-                    roles: ['Employee', 'Manager'],
-                    statuses: ['Active', 'Inactive']
-                });
-            }
-        } catch (dbError) {
-            console.error('Database error, using demo data:', dbError);
-        }
-        
-        // Return demo data when employees table is empty or database error
-        return res.json({
+        // Always return demo data for now since we just converted to PostgreSQL
+        // Once employees are added, this can be enhanced to use real data
+        res.json({
             departments: ['Engineering', 'Data Science', 'Product Management', 'Operations', 'SEAS IT'],
             lcats: [
                 'Program Manager (PM)',
