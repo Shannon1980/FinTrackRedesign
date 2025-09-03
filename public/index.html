@@ -162,6 +162,11 @@
                     <i class="fas fa-analytics me-1"></i> Analytics
                 </button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="contract-analysis-tab" data-bs-toggle="tab" data-bs-target="#contract-analysis" type="button">
+                    <i class="fas fa-file-contract me-1"></i> Contract Analysis
+                </button>
+            </li>
         </ul>
 
         <!-- Tab Content -->
@@ -704,6 +709,179 @@
                             </div>
                             <div class="col-md-6">
                                 <canvas id="lcatChart" width="400" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contract Analysis Tab -->
+            <div class="tab-pane fade" id="contract-analysis" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-contract me-2"></i> Contract Cost Analysis
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Period Selection -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Analysis Period</label>
+                                <select class="form-select" id="contractPeriod" onchange="loadContractCosts()">
+                                    <option value="base-year">Base Year (3/12/2024 - 3/12/2025)</option>
+                                    <option value="option-year-1">Option Year 1 (3/13/2025 - 3/12/2026)</option>
+                                    <option value="monthly">Monthly View</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3" id="monthSelection" style="display: none;">
+                                <label class="form-label">Month</label>
+                                <select class="form-select" id="contractMonth">
+                                    <option value="1">January</option>
+                                    <option value="2">February</option>
+                                    <option value="3">March</option>
+                                    <option value="4">April</option>
+                                    <option value="5">May</option>
+                                    <option value="6">June</option>
+                                    <option value="7">July</option>
+                                    <option value="8">August</option>
+                                    <option value="9">September</option>
+                                    <option value="10">October</option>
+                                    <option value="11">November</option>
+                                    <option value="12">December</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3" id="yearSelection" style="display: none;">
+                                <label class="form-label">Year</label>
+                                <select class="form-select" id="contractYear">
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2026">2026</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button class="btn btn-primary" onclick="loadContractCosts()">
+                                    <i class="fas fa-calculator me-1"></i> Calculate
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Cost Summary Cards -->
+                        <div class="row mb-4" id="costSummaryCards" style="display: none;">
+                            <div class="col-md-3">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body text-center">
+                                        <h4 id="directLaborTotal">$0</h4>
+                                        <p class="mb-0">Direct Labor</p>
+                                        <small id="directLaborSubtext">Employee costs</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body text-center">
+                                        <h4 id="subcontractorLaborTotal">$0</h4>
+                                        <p class="mb-0">Subcontractor Labor</p>
+                                        <small id="subcontractorLaborSubtext">External contractor costs</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-warning text-white">
+                                    <div class="card-body text-center">
+                                        <h4 id="totalIndirectTotal">$0</h4>
+                                        <p class="mb-0">Total Indirect</p>
+                                        <small id="indirectSubtext">Fringe + Overhead + G&A</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center">
+                                        <h4 id="totalContractTotal">$0</h4>
+                                        <p class="mb-0">Total Contract</p>
+                                        <small id="contractSubtext">All costs + ODC</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detailed Breakdown -->
+                        <div id="contractBreakdown" style="display: none;">
+                            <!-- Monthly Breakdown Table -->
+                            <div class="card mt-4" id="monthlyBreakdownCard" style="display: none;">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Monthly Breakdown</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-sm">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>Month</th>
+                                                    <th>Direct Labor</th>
+                                                    <th>Subcontractor</th>
+                                                    <th>Indirect Costs</th>
+                                                    <th>ODC</th>
+                                                    <th>Monthly Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="monthlyBreakdownTable">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Labor Breakdown -->
+                            <div class="row mt-4" id="laborBreakdownRow" style="display: none;">
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">Direct Labor Breakdown</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Employee</th>
+                                                            <th>Hours</th>
+                                                            <th>Rate</th>
+                                                            <th>Cost</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="directLaborBreakdown">
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">Subcontractor Labor Breakdown</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Contractor</th>
+                                                            <th>Company</th>
+                                                            <th>Hours</th>
+                                                            <th>Rate</th>
+                                                            <th>Cost</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="subcontractorLaborBreakdown">
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

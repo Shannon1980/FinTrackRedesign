@@ -1654,6 +1654,150 @@ function renderIndirectCostsTable(costs) {
     }).join('');
 }
 
+// Contract Analysis Functions
+async function loadContractCosts() {
+    const period = document.getElementById('contractPeriod').value;
+    const month = document.getElementById('contractMonth')?.value || 1;
+    const year = document.getElementById('contractYear')?.value || 2024;
+    
+    // Show/hide month and year selection based on period
+    const monthSelection = document.getElementById('monthSelection');
+    const yearSelection = document.getElementById('yearSelection');
+    
+    if (period === 'monthly') {
+        monthSelection.style.display = 'block';
+        yearSelection.style.display = 'block';
+    } else {
+        monthSelection.style.display = 'none';
+        yearSelection.style.display = 'none';
+    }
+    
+    try {
+        const headers = {};
+        if (app.authToken) {
+            headers['Authorization'] = `Bearer ${app.authToken}`;
+        }
+        
+        const url = `/api/contract-costs/${period}?year=${year}&month=${month}`;
+        const response = await fetch(url, { headers });
+        
+        if (response.ok) {
+            const costData = await response.json();
+            displayContractCosts(costData, period);
+            app.showAlert('success', 'Contract costs loaded successfully');
+        } else {
+            app.showAlert('warning', 'Failed to load contract costs');
+        }
+    } catch (error) {
+        console.error('Error loading contract costs:', error);
+        app.showAlert('danger', 'Error loading contract costs: ' + error.message);
+    }
+}
+
+function displayContractCosts(data, period) {
+    // Update summary cards
+    document.getElementById('directLaborTotal').textContent = `$${data.directLaborCost.toLocaleString()}`;
+    document.getElementById('subcontractorLaborTotal').textContent = `$${data.subcontractorLaborCost.toLocaleString()}`;
+    document.getElementById('totalIndirectTotal').textContent = `$${data.totalIndirectCosts.toLocaleString()}`;
+    document.getElementById('totalContractTotal').textContent = `$${data.totalContractCosts.toLocaleString()}`;
+    
+    // Update subtexts
+    if (period === 'monthly') {
+        document.getElementById('directLaborSubtext').textContent = `Month: ${data.period}`;
+        document.getElementById('subcontractorLaborSubtext').textContent = `External contractors`;
+        document.getElementById('indirectSubtext').textContent = `Fringe + Overhead + G&A`;
+        document.getElementById('contractSubtext').textContent = `Total + ODC: $${data.totalOdcCosts.toLocaleString()}`;
+    } else {
+        document.getElementById('directLaborSubtext').textContent = data.periodName || period;
+        document.getElementById('subcontractorLaborSubtext').textContent = `12-month period`;
+        document.getElementById('indirectSubtext').textContent = `Annual indirect costs`;
+        document.getElementById('contractSubtext').textContent = `Total + ODC: $${data.totalOdcCosts.toLocaleString()}`;
+    }
+    
+    // Show summary cards
+    document.getElementById('costSummaryCards').style.display = 'block';
+    document.getElementById('contractBreakdown').style.display = 'block';
+    
+    // Handle monthly breakdown for period views
+    if (data.monthlyBreakdown && (period === 'base-year' || period === 'option-year-1')) {
+        displayMonthlyBreakdown(data.monthlyBreakdown);
+        document.getElementById('monthlyBreakdownCard').style.display = 'block';
+    } else {
+        document.getElementById('monthlyBreakdownCard').style.display = 'none';
+    }
+    
+    // Handle labor breakdown for monthly view
+    if (data.breakdown && period === 'monthly') {
+        displayLaborBreakdown(data.breakdown);
+        document.getElementById('laborBreakdownRow').style.display = 'block';
+    } else {
+        document.getElementById('laborBreakdownRow').style.display = 'none';
+    }
+}
+
+function displayMonthlyBreakdown(monthlyData) {
+    const tbody = document.getElementById('monthlyBreakdownTable');
+    
+    tbody.innerHTML = monthlyData.map(month => {
+        const monthTotal = month.directLaborCost + month.subcontractorLaborCost + month.indirectCosts + month.odcCosts;
+        return `
+            <tr>
+                <td>${month.month}</td>
+                <td>$${month.directLaborCost.toLocaleString()}</td>
+                <td>$${month.subcontractorLaborCost.toLocaleString()}</td>
+                <td>$${month.indirectCosts.toLocaleString()}</td>
+                <td>$${month.odcCosts.toLocaleString()}</td>
+                <td><strong>$${monthTotal.toLocaleString()}</strong></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function displayLaborBreakdown(breakdown) {
+    // Direct labor breakdown
+    const directTbody = document.getElementById('directLaborBreakdown');
+    directTbody.innerHTML = breakdown.directLabor.map(emp => `
+        <tr>
+            <td>${emp.employee}</td>
+            <td>${emp.hours}</td>
+            <td>$${emp.rate}</td>
+            <td>$${emp.cost.toLocaleString()}</td>
+        </tr>
+    `).join('');
+    
+    // Subcontractor labor breakdown
+    const subTbody = document.getElementById('subcontractorLaborBreakdown');
+    subTbody.innerHTML = breakdown.subcontractorLabor.map(emp => `
+        <tr>
+            <td>${emp.employee}</td>
+            <td>${emp.company || '-'}</td>
+            <td>${emp.hours}</td>
+            <td>$${emp.rate}</td>
+            <td>$${emp.cost.toLocaleString()}</td>
+        </tr>
+    `).join('');
+}
+
+// Initialize contract period onChange handler
+document.addEventListener('DOMContentLoaded', function() {
+    const contractPeriod = document.getElementById('contractPeriod');
+    if (contractPeriod) {
+        contractPeriod.addEventListener('change', function() {
+            const period = this.value;
+            const monthSelection = document.getElementById('monthSelection');
+            const yearSelection = document.getElementById('yearSelection');
+            
+            if (period === 'monthly') {
+                monthSelection.style.display = 'block';
+                yearSelection.style.display = 'block';
+            } else {
+                monthSelection.style.display = 'none';
+                yearSelection.style.display = 'none';
+            }
+        });
+    }
+});
+
 function showAddOdcModal() {
     // Set current month as default
     const now = new Date();
