@@ -667,6 +667,72 @@ app.get('/api/billing-period/:year/:period', authMiddleware, async (req, res) =>
     }
 });
 
+// GET /api/profit-loss - Calculate current month profit/loss
+app.get('/api/profit-loss', authMiddleware, async (req, res) => {
+    try {
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth() + 1;
+        
+        // For demo mode, return sample profit/loss data
+        if (mongoose.connection.readyState !== 1) {
+            const revenue = 125000;
+            const costs = 98500;
+            const profit = revenue - costs;
+            const profitMargin = revenue > 0 ? (profit / revenue) * 100 : 0;
+            
+            return res.json({
+                revenue,
+                costs,
+                profit,
+                profitMargin: profitMargin.toFixed(1),
+                month: `${year}-${month.toString().padStart(2, '0')}`
+            });
+        }
+        
+        const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
+        
+        // Calculate total revenue from employee billing
+        const employees = await Employee.find({
+            $or: [
+                { end_date: { $exists: false } },
+                { end_date: null },
+                { end_date: { $gte: new Date(year, month - 1, 1) } }
+            ]
+        });
+        
+        let totalRevenue = 0;
+        employees.forEach(employee => {
+            const monthlyData = employee.monthly_data.find(data => data.month === monthKey);
+            const actualHours = monthlyData?.actual_hours || employee.hours_per_month || 160;
+            const billRate = employee.bill_rate || 85; // Default bill rate
+            totalRevenue += actualHours * billRate;
+        });
+        
+        // Calculate total costs using existing project costs calculation
+        const projectCosts = await calculateProjectCosts(year, month);
+        
+        // Get ODC costs for the month
+        const odcItems = await ODCItem.find({ month: monthKey });
+        const totalOdcCost = odcItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+        
+        const totalCosts = projectCosts.total_cost + totalOdcCost;
+        const profit = totalRevenue - totalCosts;
+        const profitMargin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0;
+        
+        res.json({
+            revenue: totalRevenue,
+            costs: totalCosts,
+            profit,
+            profitMargin: profitMargin.toFixed(1),
+            month: monthKey
+        });
+    } catch (error) {
+        console.error('Error calculating profit/loss:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
 // POST /api/employees/:id/monthly-billing - Add/update monthly billing data
 app.post('/api/employees/:id/monthly-billing', authMiddleware, async (req, res) => {
     try {

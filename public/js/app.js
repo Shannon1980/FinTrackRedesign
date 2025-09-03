@@ -426,6 +426,42 @@ class FinancialTracker {
         document.getElementById('totalHours').textContent = totalHours.toLocaleString();
         document.getElementById('costVariance').textContent = '$' + costVariance.toLocaleString();
         document.getElementById('costVariance').className = costVariance >= 0 ? 'text-danger' : 'text-success';
+        
+        // Load profit/loss data
+        this.loadProfitLoss();
+    }
+
+    async loadProfitLoss() {
+        try {
+            const headers = {};
+            if (this.authToken) {
+                headers['Authorization'] = `Bearer ${this.authToken}`;
+            }
+            
+            const response = await fetch('/api/profit-loss', { headers });
+            if (response.ok) {
+                const profitLossData = await response.json();
+                
+                // Update profit/loss dashboard cards
+                document.getElementById('totalRevenue').textContent = '$' + profitLossData.revenue.toLocaleString();
+                document.getElementById('totalCosts').textContent = '$' + profitLossData.costs.toLocaleString();
+                document.getElementById('profitLoss').textContent = '$' + profitLossData.profit.toLocaleString();
+                document.getElementById('profitMargin').textContent = profitLossData.profitMargin + '%';
+                
+                // Update profit/loss card color based on profit value
+                const profitLossCard = document.getElementById('profitLossCard');
+                if (profitLossData.profit > 0) {
+                    profitLossCard.className = 'card text-center p-3 bg-success text-white';
+                } else if (profitLossData.profit < 0) {
+                    profitLossCard.className = 'card text-center p-3 bg-danger text-white';
+                } else {
+                    profitLossCard.className = 'card text-center p-3 bg-warning text-dark';
+                }
+            }
+        } catch (error) {
+            console.error('Error loading profit/loss:', error);
+            // Don't show error alert for this as it's not critical
+        }
     }
 
     showAddEmployee() {
