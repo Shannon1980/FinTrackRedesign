@@ -1237,6 +1237,7 @@ async function updateMonthlyBilling(employeeId, month) {
 
 // Import functions for contract costs
 async function importDataHelper(endpoint, fileInputId, successMessage) {
+    try {
         const fileInput = document.getElementById(fileInputId);
         const file = fileInput.files[0];
         
@@ -1256,11 +1257,14 @@ async function importDataHelper(endpoint, fileInputId, successMessage) {
         try {
             app.showAlert('info', 'Importing data, please wait...');
             
+            const headers = {};
+            if (app.authToken) {
+                headers['Authorization'] = `Bearer ${app.authToken}`;
+            }
+            
             const response = await fetch(endpoint, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${app.authToken}`
-                },
+                headers: headers,
                 body: formData
             });
 
@@ -1282,7 +1286,11 @@ async function importDataHelper(endpoint, fileInputId, successMessage) {
             console.error('Import error:', error);
             app.showAlert('danger', 'Import failed: ' + error.message);
         }
+    } catch (error) {
+        console.error('Import data helper error:', error);
+        app.showAlert('danger', 'Import failed: ' + error.message);
     }
+}
 
 // Contract Costs and ODC Management Functions
 let currentProjectCosts = null;
