@@ -381,7 +381,7 @@ class FinancialTracker {
         const tbody = document.getElementById('employeeTable');
         
         if (this.employees.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">No employees found. Add some employees to get started.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No employees found. Add some employees to get started.</td></tr>';
             return;
         }
 
@@ -398,7 +398,6 @@ class FinancialTracker {
                     <td><span class="badge ${emp.role === 'Manager' ? 'bg-primary' : 'bg-info'}">${emp.role || 'Employee'}</span></td>
                     <td><span class="badge ${emp.status === 'Active' ? 'bg-success' : 'bg-secondary'}">${emp.status || 'Active'}</span></td>
                     <td><small>${emp.lcat}</small></td>
-                    <td>${emp.years_experience} years</td>
                     <td>$${(emp.priced_salary || 0).toLocaleString()}</td>
                     <td>$${(emp.current_salary || 0).toLocaleString()}</td>
                     <td>$${(emp.bill_rate || 0).toFixed(2)}</td>
@@ -594,10 +593,6 @@ class FinancialTracker {
                         if (index < values.length) {
                             const value = values[index];
                             
-                            // Debug logging for Current_Salary and Bill_Rate
-                            if (header === 'Current_Salary' || header === 'Bill_Rate') {
-                                console.log(`Processing ${header}: "${value}" -> ${parseFloat(value) || 0}`);
-                            }
                             
                             // Map CSV headers to employee object
                             switch (header) {
@@ -663,12 +658,6 @@ class FinancialTracker {
                     // Add unique ID
                     employee._id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
                     
-                    // Debug: Log the complete employee object
-                    console.log('Final employee object:', {
-                        name: employee.employee_name,
-                        current_salary: employee.current_salary,
-                        bill_rate: employee.bill_rate
-                    });
                     
                     newEmployees.push(employee);
                     importedCount++;
