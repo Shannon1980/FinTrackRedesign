@@ -165,27 +165,62 @@
                             <button class="btn btn-success btn-sm me-2" onclick="showAddEmployee()">
                                 <i class="fas fa-plus me-1"></i> Add Employee
                             </button>
-                            <button class="btn btn-primary btn-sm me-2" onclick="app.downloadTemplate()">
-                                <i class="fas fa-file-download me-1"></i> Employee Template
-                            </button>
-                            <button class="btn btn-outline-primary btn-sm me-2" onclick="downloadConsolidatedTemplate()">
-                                <i class="fas fa-file-csv me-1"></i> Consolidated Template
-                            </button>
-                            <button class="btn btn-info btn-sm me-2" onclick="app.importCSV()">
-                                <i class="fas fa-upload me-1"></i> Import Employees
-                            </button>
-                            <button class="btn btn-success btn-sm me-2" onclick="importConsolidated()">
-                                <i class="fas fa-database me-1"></i> Consolidated Import
-                            </button>
+                            <div class="btn-group me-2" role="group">
+                                <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-file-download me-1"></i> Download Template
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="downloadConsolidatedTemplate()">
+                                        <i class="fas fa-database me-2"></i> Complete Import Template
+                                        <small class="d-block text-muted">Employees + Monthly Data + Costs</small>
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" onclick="app.downloadTemplate()">
+                                        <i class="fas fa-users me-2"></i> Employees Only Template
+                                        <small class="d-block text-muted">Basic employee information</small>
+                                    </a></li>
+                                </ul>
+                            </div>
+                            <div class="btn-group me-2" role="group">
+                                <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-upload me-1"></i> Import Data
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="importConsolidated()">
+                                        <i class="fas fa-database me-2"></i> Complete Import
+                                        <small class="d-block text-muted">Import everything at once</small>
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" onclick="app.importCSV()">
+                                        <i class="fas fa-users me-2"></i> Employees Only
+                                        <small class="d-block text-muted">Import basic employee data</small>
+                                    </a></li>
+                                </ul>
+                            </div>
                             <button class="btn btn-secondary btn-sm" onclick="app.exportCSV()">
-                                <i class="fas fa-download me-1"></i> Export CSV
+                                <i class="fas fa-download me-1"></i> Export Data
                             </button>
                         </div>
                     </div>
                     <div class="card-body">
-                        <!-- Quick Help -->
-                        <div class="alert alert-light border-0 py-2 mb-3">
-                            <small><i class="fas fa-info-circle me-1"></i> <strong>Quick Start:</strong> Download template, add employees, then import CSV file</small>
+                        <!-- Quick Start Guide -->
+                        <div class="alert alert-info border-0 py-3 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-rocket me-2 mt-1"></i>
+                                <div>
+                                    <strong>Quick Start - Complete Setup in 3 Steps:</strong>
+                                    <ol class="mb-0 mt-1 small">
+                                        <li><strong>Download:</strong> Use "Complete Import Template" to get the comprehensive CSV format</li>
+                                        <li><strong>Fill In:</strong> Add your employees, monthly revenue data, and indirect costs in the template</li>
+                                        <li><strong>Import:</strong> Use "Complete Import" to load all your data at once</li>
+                                    </ol>
+                                    <div class="mt-2">
+                                        <span class="badge bg-success me-1">✓ Employees</span>
+                                        <span class="badge bg-success me-1">✓ Monthly Billing</span>
+                                        <span class="badge bg-success">✓ Indirect Costs</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <!-- Filters -->

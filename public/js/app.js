@@ -2132,7 +2132,7 @@ function downloadConsolidatedTemplate() {
     link.click();
     document.body.removeChild(link);
     
-    app.showAlert('success', 'Consolidated template downloaded! This file includes employee data, monthly hours/revenue, and indirect costs in one CSV.');
+    app.showAlert('success', 'Complete Import Template downloaded! Fill in employee data, monthly revenue, and indirect costs, then use "Complete Import" to load everything at once.');
 }
 
 async function importOdcItems() {
