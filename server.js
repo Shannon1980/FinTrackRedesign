@@ -377,7 +377,7 @@ app.post('/api/import/consolidated', authMiddleware, upload.single('file'), asyn
                     const revenueField = `${month}_Revenue`;
                     
                     if (row[revenueField] && parseFloat(row[revenueField]) > 0) {
-                        const monthValue = month.replace('_', '-').toLowerCase();
+                        const monthValue = month.replace('_', '-').toLowerCase().substring(0, 7); // Ensure max 7 chars like "jan-2024"
                         const revenue = parseFloat(row[revenueField]);
                         const hours = Math.round(revenue / billRate); // Calculate hours from revenue and bill rate
                         
