@@ -18,6 +18,11 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files from public directory
 app.use(express.static('public'));
 
+// Serve the consolidated template file
+app.get('/consolidated_import_template.csv', (req, res) => {
+    res.sendFile(__dirname + '/consolidated_import_template.csv');
+});
+
 // PostgreSQL connection
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -978,18 +983,30 @@ app.get('/api/all-indirect-costs', authMiddleware, async (req, res) => {
         }
         
         // For real database, would query IndirectCost collection
-        const indirectCosts = await IndirectCost.find({}).sort({ month: 1, type: 1 });
+        const result = await db.query(`
+            SELECT month, fringe_amount, overhead_amount, ga_amount, profit_amount, notes 
+            FROM monthly_indirect_costs 
+            ORDER BY month ASC
+        `);
         
-        // Transform to flat structure for table display
-        const flatCosts = [];
-        indirectCosts.forEach(cost => {
-            if (cost.fringe_amount > 0) flatCosts.push({ month: cost.month, type: 'fringe', amount: cost.fringe_amount, notes: cost.notes });
-            if (cost.overhead_amount > 0) flatCosts.push({ month: cost.month, type: 'overhead', amount: cost.overhead_amount, notes: cost.notes });
-            if (cost.ga_amount > 0) flatCosts.push({ month: cost.month, type: 'ga', amount: cost.ga_amount, notes: cost.notes });
-            if (cost.profit_amount > 0) flatCosts.push({ month: cost.month, type: 'profit', amount: cost.profit_amount, notes: cost.notes });
+        // Convert to the expected format for the frontend
+        const indirectCosts = [];
+        result.rows.forEach(row => {
+            if (row.fringe_amount > 0) {
+                indirectCosts.push({ month: row.month, type: 'fringe', amount: row.fringe_amount, notes: row.notes });
+            }
+            if (row.overhead_amount > 0) {
+                indirectCosts.push({ month: row.month, type: 'overhead', amount: row.overhead_amount, notes: row.notes });
+            }
+            if (row.ga_amount > 0) {
+                indirectCosts.push({ month: row.month, type: 'ga', amount: row.ga_amount, notes: row.notes });
+            }
+            if (row.profit_amount > 0) {
+                indirectCosts.push({ month: row.month, type: 'profit', amount: row.profit_amount, notes: row.notes });
+            }
         });
         
-        res.json(flatCosts);
+        res.json(indirectCosts);
     } catch (error) {
         console.error('Error fetching all indirect costs:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
